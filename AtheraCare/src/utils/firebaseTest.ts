@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { collection, getDocs, query, where, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, doc, setDoc } from 'firebase/firestore';
 
 // Test Firebase connection
 export const testFirebaseConnection = async (): Promise<boolean> => {
@@ -12,6 +12,11 @@ export const testFirebaseConnection = async (): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error('❌ Firebase connection or permissions test failed:', error);
+    if (error instanceof Error) {
+      if (error.message.includes('permission') || error.message.includes('insufficient')) {
+        console.error('This is a permissions error. Please update your Firebase security rules.');
+      }
+    }
     return false;
   }
 };
@@ -38,5 +43,63 @@ export const checkFirebaseConfig = () => {
     console.log('Firebase config loaded successfully');
   } catch (error) {
     console.error('Error checking Firebase config:', error);
+  }
+};
+
+// Create test data to verify permissions
+export const createTestActivityData = async (userId: string): Promise<boolean> => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const testData = {
+      date: today,
+      userId: userId,
+      medications: {
+        total: 2,
+        taken: 1,
+        missed: 1,
+        streak: 0
+      },
+      water: {
+        totalOz: 32,
+        goalOz: 64,
+        percentage: 50,
+        streak: 0
+      },
+      steps: {
+        count: 5000,
+        goal: 10000,
+        percentage: 50,
+        streak: 0
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const docRef = doc(db, 'dailyActivities', `${userId}_${today}`);
+    await setDoc(docRef, testData);
+    console.log('✅ Test activity data created successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Error creating test activity data:', error);
+    if (error instanceof Error) {
+      if (error.message.includes('permission') || error.message.includes('insufficient')) {
+        console.error('This is a permissions error. Please update your Firebase security rules.');
+      }
+    }
+    return false;
+  }
+};
+
+// Test if we can read from dailyActivities collection
+export const testDailyActivitiesRead = async (userId: string): Promise<boolean> => {
+  try {
+    const activitiesRef = collection(db, 'dailyActivities');
+    const q = query(activitiesRef, where('userId', '==', userId), limit(1));
+    await getDocs(q);
+    console.log('✅ DailyActivities read test passed');
+    return true;
+  } catch (error) {
+    console.error('❌ DailyActivities read test failed:', error);
+    return false;
   }
 };

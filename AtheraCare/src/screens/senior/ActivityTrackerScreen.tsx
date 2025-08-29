@@ -15,7 +15,7 @@ import {
   updateStepsTracking,
   updateMoodEnergy
 } from '../../utils/activityTracker';
-import { testFirebaseConnection, testCollectionPermissions } from '../../utils/firebaseTest';
+import { testFirebaseConnection, testCollectionPermissions, createTestActivityData, testDailyActivitiesRead } from '../../utils/firebaseTest';
 import ActivityChart from '../../components/ActivityChart';
 import CustomAlert from '../../components/CustomAlert';
 
@@ -50,18 +50,45 @@ const ActivityTrackerScreen: React.FC = () => {
   };
 
   const testFirebasePermissions = async () => {
+    if (!user) return;
+    
     try {
       const connectionTest = await testFirebaseConnection();
       const permissionsTest = await testCollectionPermissions('dailyActivities');
+      const readTest = await testDailyActivitiesRead(user.uid);
       
-      if (connectionTest && permissionsTest) {
-        showAlert('Firebase Test', '✅ All tests passed! Firebase is working correctly.');
+      let message = '';
+      if (connectionTest && permissionsTest && readTest) {
+        message = '✅ All tests passed! Firebase is working correctly.';
       } else {
-        showAlert('Firebase Test', '❌ Some tests failed. Check the console for details.');
+        message = '❌ Some tests failed:\n';
+        if (!connectionTest) message += '• Connection test failed\n';
+        if (!permissionsTest) message += '• Permissions test failed\n';
+        if (!readTest) message += '• Read test failed\n';
+        message += '\nPlease check the console for details and update Firebase security rules.';
       }
+      
+      showAlert('Firebase Test', message);
     } catch (error) {
       console.error('Error testing Firebase:', error);
       showAlert('Firebase Test', '❌ Test failed with error. Check the console.');
+    }
+  };
+
+  const createTestData = async () => {
+    if (!user) return;
+    
+    try {
+      const success = await createTestActivityData(user.uid);
+      if (success) {
+        showAlert('Test Data', '✅ Test activity data created! Refresh the screen to see it.');
+        await loadActivityData(); // Refresh the data
+      } else {
+        showAlert('Test Data', '❌ Failed to create test data. Check the console for details.');
+      }
+    } catch (error) {
+      console.error('Error creating test data:', error);
+      showAlert('Test Data', '❌ Error creating test data. Check the console.');
     }
   };
 
@@ -90,15 +117,15 @@ const ActivityTrackerScreen: React.FC = () => {
       setCurrentWeekStats(calculateWeeklyStats(currentData));
       setPreviousWeekStats(calculateWeeklyStats(previousData));
       
-    } catch (error) {
-      console.error('Error loading activity data:', error);
-      // Don't show alert for empty data, just log the error
-      if (error instanceof Error && error.message.includes('permissions')) {
-        showAlert('Permission Error', 'Please check your Firebase security rules for the dailyActivities collection');
-      } else if (error instanceof Error && error.message.includes('network')) {
-        showAlert('Network Error', 'Please check your internet connection and try again');
-      }
-    } finally {
+         } catch (error) {
+       console.error('Error loading activity data:', error);
+       // Don't show alert for empty data, just log the error
+       if (error instanceof Error && error.message.includes('permissions')) {
+         showAlert('Permission Error', 'Please check your Firebase security rules for the dailyActivities collection. Tap the "Test Firebase Permissions" button below to diagnose the issue.');
+       } else if (error instanceof Error && error.message.includes('network')) {
+         showAlert('Network Error', 'Please check your internet connection and try again');
+       }
+     } finally {
       setLoading(false);
     }
   };
@@ -248,14 +275,23 @@ const ActivityTrackerScreen: React.FC = () => {
           <Text variant="bodyMedium" style={styles.debugText}>
             If you're seeing permission errors, tap this button to test Firebase connection and permissions.
           </Text>
-          <Button
-            mode="outlined"
-            onPress={testFirebasePermissions}
-            style={styles.testButton}
-            icon="bug"
-          >
-            Test Firebase Permissions
-          </Button>
+                     <Button
+             mode="outlined"
+             onPress={testFirebasePermissions}
+             style={styles.testButton}
+             icon="bug"
+           >
+             Test Firebase Permissions
+           </Button>
+           
+           <Button
+             mode="outlined"
+             onPress={createTestData}
+             style={styles.testButton}
+             icon="plus"
+           >
+             Create Test Data
+           </Button>
         </Card.Content>
       </Card>
 

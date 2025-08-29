@@ -143,61 +143,43 @@ export const getWeeklyActivity = async (
   startDate: string, 
   endDate: string
 ): Promise<DailyActivity[]> => {
+  if (!userId) return [];
+  
   try {
     const activitiesRef = collection(db, 'dailyActivities');
     
-    // Try the simple query first
-    try {
-      const q = query(
-        activitiesRef,
-        where('userId', '==', userId),
-        orderBy('date', 'asc')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const activities: DailyActivity[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data() as DailyActivity;
-        // Filter by date range in memory to avoid complex Firestore queries
-        if (data.date >= startDate && data.date <= endDate) {
-          activities.push(data);
-        }
-      });
-      
-      return activities;
-    } catch (queryError) {
-      // If the query fails, try without orderBy
-      console.log('Query with orderBy failed, trying without:', queryError);
-      
-      const simpleQuery = query(
-        activitiesRef,
-        where('userId', '==', userId)
-      );
-      
-      const querySnapshot = await getDocs(simpleQuery);
-      const activities: DailyActivity[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data() as DailyActivity;
-        // Filter by date range in memory to avoid complex Firestore queries
-        if (data.date >= startDate && data.date <= endDate) {
-          activities.push(data);
-        }
-      });
-      
-      // Sort manually since we couldn't use orderBy
-      return activities.sort((a, b) => a.date.localeCompare(b.date));
-    }
+    // Use a simple query without orderBy to avoid index requirements
+    const simpleQuery = query(
+      activitiesRef,
+      where('userId', '==', userId)
+    );
+    
+    const querySnapshot = await getDocs(simpleQuery);
+    const activities: DailyActivity[] = [];
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data() as DailyActivity;
+      // Filter by date range in memory to avoid complex Firestore queries
+      if (data.date >= startDate && data.date <= endDate) {
+        activities.push(data);
+      }
+    });
+    
+    // Sort manually since we're not using orderBy
+    return activities.sort((a, b) => a.date.localeCompare(b.date));
+    
   } catch (error) {
     console.error('Error getting weekly activity:', error);
     
     // Check if it's a permissions error
     if (error instanceof Error) {
       if (error.message.includes('permission') || error.message.includes('insufficient')) {
-        console.error('Firebase permissions error - check security rules');
+        console.error('Firebase permissions error - check security rules for dailyActivities collection');
+        console.error('Please update your Firebase security rules to allow access to dailyActivities collection');
       } else if (error.message.includes('network') || error.message.includes('unavailable')) {
         console.error('Firebase network error - check internet connection');
+      } else {
+        console.error('Unknown Firebase error:', error.message);
       }
     }
     
