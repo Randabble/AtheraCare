@@ -8,13 +8,11 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { signIn, signUp } from '../utils/auth';
+import { useAuth } from '../contexts/AuthContext';
+import { testFirebaseConnection, checkFirebaseConfig } from '../utils/firebaseTest';
 
-interface LoginScreenProps {
-  onLoginSuccess: () => void;
-}
-
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
+export const LoginScreen: React.FC = () => {
+  const { signIn, signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
@@ -26,6 +24,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       return;
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    // Password validation for sign up
+    if (isSignUp && password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
     setLoading(true);
     try {
       if (isSignUp) {
@@ -34,8 +45,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       } else {
         await signIn(email, password);
       }
-      onLoginSuccess();
     } catch (error: any) {
+      console.log('Auth error:', error);
       Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
@@ -90,6 +101,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               ? 'Already have an account? Sign In'
               : "Don't have an account? Sign Up"}
           </Text>
+        </TouchableOpacity>
+
+        {/* Debug button - remove in production */}
+        <TouchableOpacity
+          style={[styles.switchButton, { marginTop: 20 }]}
+          onPress={async () => {
+            console.log('Testing Firebase connection...');
+            checkFirebaseConfig();
+            const result = await testFirebaseConnection();
+            Alert.alert('Firebase Test', result ? 'Connection successful!' : 'Connection failed. Check console for details.');
+          }}
+        >
+          <Text style={styles.switchText}>🔧 Test Firebase Connection</Text>
         </TouchableOpacity>
       </View>
     </View>

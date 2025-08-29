@@ -26,7 +26,7 @@ const AppContent = () => {
   // Then show auth if no user
   if (!user) {
     console.log('Showing login screen');
-    return <LoginScreen onLoginSuccess={() => {}} />;
+    return <LoginScreen />;
   }
 
   // Finally show main app

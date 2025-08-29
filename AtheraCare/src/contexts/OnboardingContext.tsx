@@ -57,14 +57,20 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
   const [currentStep, setCurrentStep] = useState(0);
   const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences);
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
+  const [pendingPreferences, setPendingPreferences] = useState<UserPreferences | null>(null);
   const totalSteps = 8;
 
   // Load user preferences from Firestore when user changes
   useEffect(() => {
     if (user) {
       loadUserPreferences();
+      
+      // If there are pending preferences from onboarding, save them now
+      if (pendingPreferences) {
+        savePendingPreferences();
+      }
     }
-  }, [user]);
+  }, [user, pendingPreferences]);
 
   const loadUserPreferences = async () => {
     if (!user) return;
@@ -77,6 +83,19 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
       }
     } catch (error) {
       console.error('Error loading user preferences:', error);
+    }
+  };
+
+  const savePendingPreferences = async () => {
+    if (!user || !pendingPreferences) return;
+    
+    try {
+      await saveUserPreferences(user.uid, user.email || '', pendingPreferences);
+      console.log('Pending preferences saved to Firestore');
+      setPreferences(pendingPreferences);
+      setPendingPreferences(null);
+    } catch (error) {
+      console.error('Error saving pending preferences:', error);
     }
   };
 
@@ -97,9 +116,9 @@ export const OnboardingProvider: React.FC<OnboardingProviderProps> = ({ children
         await saveUserPreferences(user.uid, user.email || '', preferences);
         console.log('Onboarding completed and preferences saved to Firestore');
       } else {
-        // If no user, just save preferences locally for now
-        // They will be saved to Firestore when user logs in
-        console.log('Onboarding completed, preferences saved locally');
+        // If no user, store preferences as pending to save later
+        setPendingPreferences(preferences);
+        console.log('Onboarding completed, preferences stored as pending');
       }
       setIsOnboardingComplete(true);
     } catch (error) {

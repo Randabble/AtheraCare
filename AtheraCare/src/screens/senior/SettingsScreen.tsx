@@ -6,7 +6,7 @@ import { useOnboarding } from '../../contexts/OnboardingContext';
 
 const SettingsScreen: React.FC = () => {
   const { user, signOut } = useAuth();
-  const { preferences, resetOnboarding } = useTheme();
+  const { preferences, resetOnboarding } = useOnboarding();
   const theme = useTheme();
   const [showMedNames, setShowMedNames] = useState(false);
 
