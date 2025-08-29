@@ -17,6 +17,7 @@ import {
   updateMoodEnergy
 } from '../../utils/activityTracker';
 import { testFirebaseConnection, testCollectionPermissions, createTestActivityData, testDailyActivitiesRead } from '../../utils/firebaseTest';
+import { scheduleWeeklyReport } from '../../utils/emailReports';
 import ActivityChart from '../../components/ActivityChart';
 import CustomAlert from '../../components/CustomAlert';
 
@@ -94,6 +95,21 @@ const ActivityTrackerScreen: React.FC = () => {
     } catch (error) {
       console.error('Error creating test data:', error);
       showAlert('Test Data', '❌ Error creating test data. Check the console.');
+    }
+  };
+
+  const sendWeeklyReport = async () => {
+    if (!user || !preferences.familyEmail) {
+      showAlert('Weekly Report', '❌ No family email configured. Please set up family connection in settings.');
+      return;
+    }
+    
+    try {
+      await scheduleWeeklyReport(user.uid, preferences.displayName || 'User', preferences.familyEmail);
+      showAlert('Weekly Report', '✅ Weekly health report sent! Check the console for email details.');
+    } catch (error) {
+      console.error('Error sending weekly report:', error);
+      showAlert('Weekly Report', '❌ Failed to send weekly report. Check the console for details.');
     }
   };
 
@@ -367,6 +383,15 @@ const ActivityTrackerScreen: React.FC = () => {
              icon="plus"
            >
              Create Test Data
+           </Button>
+           
+           <Button
+             mode="outlined"
+             onPress={sendWeeklyReport}
+             style={styles.testButton}
+             icon="email"
+           >
+             Send Weekly Report
            </Button>
         </Card.Content>
       </Card>

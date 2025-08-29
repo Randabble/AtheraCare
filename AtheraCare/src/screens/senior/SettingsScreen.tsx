@@ -174,6 +174,18 @@ const SettingsScreen: React.FC = () => {
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
             onPress={() => showAlert('Coming Soon', 'Family management will be available in the next update.')}
           />
+          {preferences?.familyConnection && preferences?.familyEmail && (
+            <>
+              <Divider />
+              <List.Item
+                title="Weekly Report Email"
+                description={preferences.familyEmail}
+                left={(props) => <List.Icon {...props} icon="email" />}
+                right={(props) => <List.Icon {...props} icon="chevron-right" />}
+                onPress={() => showAlert('Family Email', `Weekly health reports are sent to: ${preferences.familyEmail}`)}
+              />
+            </>
+          )}
           <Divider />
           <List.Item
             title="Show Medication Names"

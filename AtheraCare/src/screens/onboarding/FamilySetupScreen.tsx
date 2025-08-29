@@ -10,8 +10,13 @@ const FamilySetupScreen: React.FC = () => {
 
   const handleNext = () => {
     if (selectedOption !== null) {
-      updatePreferences({ familyConnection: selectedOption === 'yes' });
-      setCurrentStep(6);
+      if (selectedOption === 'yes') {
+        // Navigate to family email screen
+        setCurrentStep(5.5); // Use a decimal step to indicate the email screen
+      } else {
+        updatePreferences({ familyConnection: false });
+        setCurrentStep(6);
+      }
     }
   };
 

@@ -9,6 +9,7 @@ export interface UserPreferences {
   stepGoal: number;
   shareWins: boolean;
   familyConnection: boolean;
+  familyEmail?: string;
   quietHours: boolean;
   privacyMode: boolean;
   syncMode: string;

@@ -7,6 +7,7 @@ import MedicationRemindersScreen from './MedicationRemindersScreen';
 import WaterGoalScreen from './WaterGoalScreen';
 import StepGoalScreen from './StepGoalScreen';
 import FamilySetupScreen from './FamilySetupScreen';
+import FamilyEmailScreen from './FamilyEmailScreen';
 import OnboardingCompleteScreen from './OnboardingCompleteScreen';
 
 const OnboardingScreen: React.FC = () => {
@@ -26,6 +27,8 @@ const OnboardingScreen: React.FC = () => {
         return <StepGoalScreen />;
       case 5:
         return <FamilySetupScreen />;
+      case 5.5:
+        return <FamilyEmailScreen />;
       case 6:
         return <OnboardingCompleteScreen />;
       default:

@@ -53,6 +53,11 @@ const OnboardingCompleteScreen: React.FC = () => {
               <Text variant="titleMedium">
                 👨‍👩‍👧‍👦 Family Connection: {preferences.familyConnection ? 'Yes' : 'No'}
               </Text>
+              {preferences.familyEmail && (
+                <Text variant="bodyMedium" style={styles.familyEmail}>
+                  📧 Reports will be sent to: {preferences.familyEmail}
+                </Text>
+              )}
             </Card.Content>
           </Card>
         </View>
@@ -109,6 +114,11 @@ const styles = StyleSheet.create({
   },
   completeButtonContent: {
     paddingVertical: 8,
+  },
+  familyEmail: {
+    marginTop: 5,
+    color: '#666',
+    fontStyle: 'italic',
   },
 });
 
