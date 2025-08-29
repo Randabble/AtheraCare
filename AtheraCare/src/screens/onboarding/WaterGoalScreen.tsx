@@ -46,7 +46,7 @@ const WaterGoalScreen: React.FC = () => {
           >
             <Card.Content style={styles.optionContent}>
               <RadioButton
-                value={option.key}
+                value={option.key.toString()}
                 status={selectedGoal === option.key ? 'checked' : 'unchecked'}
                 onPress={() => setSelectedGoal(option.key)}
               />

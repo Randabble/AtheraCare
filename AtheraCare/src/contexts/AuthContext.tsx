@@ -58,7 +58,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       const customError = new Error(errorMessage);
-      customError.code = error.code;
+      // Type assertion for Firebase error codes
+      (customError as any).code = (error as any).code;
       throw customError;
     }
   };
@@ -92,7 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       const customError = new Error(errorMessage);
-      customError.code = error.code;
+      // Type assertion for Firebase error codes
+      (customError as any).code = (error as any).code;
       throw customError;
     }
   };

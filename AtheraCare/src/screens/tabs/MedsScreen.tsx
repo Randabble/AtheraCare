@@ -77,7 +77,7 @@ const MedsScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteMedication(user.uid, medId);
+              await deleteMedication(medId);
               await loadMedications();
               Alert.alert('Success', 'Medication deleted successfully!');
             } catch (error) {

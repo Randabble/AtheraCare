@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, Card, Button, TextInput, Chip, FAB, List, IconButton, Badge, useTheme } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
-import { getMedications, addMedication, deleteMedication, markMedicationTaken } from '../../utils/medications';
+import { getMedications, addMedication, deleteMedication, markMedicationTaken, Medication } from '../../utils/medications';
+import { updateMedicationTracking } from '../../utils/activityTracker';
 
 const MedsScreen: React.FC = () => {
   const { user } = useAuth();
   const theme = useTheme();
-  const [medications, setMedications] = useState([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMedName, setNewMedName] = useState('');
-  const [selectedDays, setSelectedDays] = useState([]);
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -91,6 +92,15 @@ const MedsScreen: React.FC = () => {
     try {
       setLoading(true);
       await markMedicationTaken(user.uid, medicationId);
+      
+      // Update activity tracker
+      const today = new Date().toISOString().split('T')[0];
+      const todaysMeds = getTodaysMeds();
+      const totalMeds = todaysMeds.length;
+      const takenMeds = todaysMeds.filter(med => med.takenToday).length + 1; // +1 for the one we just marked
+      
+      await updateMedicationTracking(user.uid, today, totalMeds, takenMeds, 0); // TODO: Calculate actual streak
+      
       await loadMedications();
       Alert.alert('Great job! 🎉', 'Medication marked as taken!');
     } catch (error) {
@@ -159,7 +169,7 @@ const MedsScreen: React.FC = () => {
                   {!med.takenToday && (
                     <Button
                       mode="contained"
-                      onPress={() => handleMarkTaken(med.id)}
+                                              onPress={() => med.id && handleMarkTaken(med.id)}
                       disabled={loading}
                       style={styles.takeButton}
                       icon="check"
@@ -202,7 +212,7 @@ const MedsScreen: React.FC = () => {
                         {...props}
                         icon="delete"
                         size={20}
-                        onPress={() => handleDeleteMedication(med.id)}
+                        onPress={() => med.id && handleDeleteMedication(med.id)}
                         disabled={loading}
                       />
                     </View>

@@ -4,6 +4,7 @@ import { Text, Card, Button, ProgressBar, TextInput, useTheme } from 'react-nati
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { getTodayHydration, addWater, resetTodayWater, updateWaterGoal } from '../../utils/hydration';
+import { updateWaterTracking } from '../../utils/activityTracker';
 
 const WaterScreen: React.FC = () => {
   const { user } = useAuth();
@@ -55,6 +56,12 @@ const WaterScreen: React.FC = () => {
     try {
       setLoading(true);
       await addWater(user.uid, amount, waterGoal);
+      
+      // Update activity tracker
+      const today = new Date().toISOString().split('T')[0];
+      const newTotal = waterIntake + amount;
+      await updateWaterTracking(user.uid, today, newTotal, waterGoal, 0); // TODO: Calculate actual streak
+      
       await loadHydration();
       Alert.alert('Success', `Added ${amount} oz of water! 💧`);
     } catch (error) {

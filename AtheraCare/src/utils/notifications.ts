@@ -7,6 +7,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -55,7 +57,10 @@ export const scheduleMedicationReminder = async (
       return null;
     }
 
-    const trigger = scheduledTime;
+    const trigger = {
+      type: Notifications.SchedulableTriggerInputTypes.DATE as const,
+      date: scheduledTime,
+    };
     
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {

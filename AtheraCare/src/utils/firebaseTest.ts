@@ -1,29 +1,42 @@
-import { auth } from '../firebase';
-import { signInAnonymously } from 'firebase/auth';
+import { db } from '../firebase';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 
-export const testFirebaseConnection = async () => {
+// Test Firebase connection
+export const testFirebaseConnection = async (): Promise<boolean> => {
   try {
-    console.log('Testing Firebase connection...');
-    
-    // Test anonymous sign in to verify Firebase is working
-    const result = await signInAnonymously(auth);
-    console.log('Firebase connection test successful:', result.user.uid);
-    
-    // Sign out immediately
-    await auth.signOut();
-    console.log('Firebase test completed successfully');
-    
+    // Try to access a collection to test permissions
+    const testRef = collection(db, 'dailyActivities');
+    const testQuery = query(testRef, limit(1));
+    await getDocs(testQuery);
+    console.log('✅ Firebase connection and permissions test passed');
     return true;
   } catch (error) {
-    console.error('Firebase connection test failed:', error);
+    console.error('❌ Firebase connection or permissions test failed:', error);
     return false;
   }
 };
 
+// Test specific collection permissions
+export const testCollectionPermissions = async (collectionName: string): Promise<boolean> => {
+  try {
+    const testRef = collection(db, collectionName);
+    const testQuery = query(testRef, limit(1));
+    await getDocs(testQuery);
+    console.log(`✅ ${collectionName} collection permissions test passed`);
+    return true;
+  } catch (error) {
+    console.error(`❌ ${collectionName} collection permissions test failed:`, error);
+    return false;
+  }
+};
+
+// Check Firebase project configuration
 export const checkFirebaseConfig = () => {
-  console.log('Firebase config check:');
-  console.log('Auth domain:', auth.config.authDomain);
-  console.log('Project ID:', auth.config.projectId);
-  console.log('API Key exists:', !!auth.config.apiKey);
-  console.log('App ID exists:', !!auth.config.appId);
+  try {
+    console.log('Firebase project ID:', db.app.options.projectId);
+    console.log('Firebase app name:', db.app.name);
+    console.log('Firebase config loaded successfully');
+  } catch (error) {
+    console.error('Error checking Firebase config:', error);
+  }
 };

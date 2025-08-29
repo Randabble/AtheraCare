@@ -12,6 +12,14 @@ export interface UserPreferences {
   quietHours: boolean;
   privacyMode: boolean;
   syncMode: string;
+  role?: 'senior' | 'family';
+  activityTracking?: boolean;
+  contrast?: 'normal' | 'high' | 'dark' | 'standard';
+  medicationTimesPerDay?: 1 | 2 | 3;
+  medicationScheduleTimes?: string[];
+  reminderStyle?: 'gentle' | 'firm' | 'standard' | 'vibrate';
+  waterQuickIncrements?: number[];
+  textScale?: 'normal' | 'large' | 'extra-large' | 'small' | 'medium' | 'extraLarge';
 }
 
 export interface OnboardingContextType {

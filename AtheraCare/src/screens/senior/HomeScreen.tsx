@@ -4,16 +4,16 @@ import CustomAlert from '../../components/CustomAlert';
 import { Text, Card, Button, ProgressBar, useTheme, Badge } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
-import { getMedications } from '../../utils/medications';
-import { getTodayHydration } from '../../utils/hydration';
+import { getMedications, Medication } from '../../utils/medications';
+import { getTodayHydration, HydrationLog } from '../../utils/hydration';
 import { Pedometer } from 'expo-sensors';
 
 const HomeScreen: React.FC = () => {
   const { user } = useAuth();
   const { preferences } = useOnboarding();
   const theme = useTheme();
-  const [medications, setMedications] = useState([]);
-  const [hydration, setHydration] = useState(null);
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [hydration, setHydration] = useState<HydrationLog | null>(null);
   const [steps, setSteps] = useState(0);
   const [loading, setLoading] = useState(true);
   
@@ -117,7 +117,7 @@ const HomeScreen: React.FC = () => {
         <Card.Content>
           <View style={styles.cardHeader}>
             <Text variant="titleLarge">💊 Today's Medications</Text>
-            <Badge>{medsTaken}/{totalMeds}</Badge>
+            <Badge>{`${medsTaken}/${totalMeds}`}</Badge>
           </View>
           
           {todaysMeds.length > 0 ? (

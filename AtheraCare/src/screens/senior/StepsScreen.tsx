@@ -4,6 +4,7 @@ import { Text, Card, Button, ProgressBar, useTheme } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { Pedometer } from 'expo-sensors';
+import { updateStepsTracking } from '../../utils/activityTracker';
 
 const StepsScreen: React.FC = () => {
   const { user } = useAuth();
@@ -38,8 +39,18 @@ const StepsScreen: React.FC = () => {
       
       if (isAvailable) {
         // Start listening to step updates
-        const subscription = Pedometer.watchStepCount((result) => {
+        const subscription = Pedometer.watchStepCount(async (result) => {
           setSteps(result.steps);
+          
+          // Update activity tracker
+          if (user) {
+            try {
+              const today = new Date().toISOString().split('T')[0];
+              await updateStepsTracking(user.uid, today, result.steps, preferences.stepGoal, 0); // TODO: Calculate actual streak
+            } catch (error) {
+              console.error('Error updating steps tracking:', error);
+            }
+          }
         });
         
         // Cleanup subscription on unmount

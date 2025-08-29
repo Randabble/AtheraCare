@@ -6,7 +6,7 @@ import { Text } from 'react-native';
 import HomeScreen from '../screens/senior/HomeScreen';
 import MedsScreen from '../screens/senior/MedsScreen';
 import WaterScreen from '../screens/senior/WaterScreen';
-import StepsScreen from '../screens/senior/StepsScreen';
+import ActivityTrackerScreen from '../screens/senior/ActivityTrackerScreen';
 import SettingsScreen from '../screens/senior/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
@@ -65,11 +65,11 @@ const SeniorTabs: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="Steps"
-        component={StepsScreen}
+        name="Activity"
+        component={ActivityTrackerScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>👟</Text>
+            <Text style={{ color, fontSize: size }}>📊</Text>
           ),
           title: 'Activity',
         }}
@@ -79,7 +79,7 @@ const SeniorTabs: React.FC = () => {
         component={SettingsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, size }}>⚙️</Text>
+            <Text style={{ color }}>⚙️</Text>
           ),
           title: 'Settings',
         }}
