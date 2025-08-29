@@ -5,11 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { testFirebaseConnection, checkFirebaseConfig } from '../utils/firebaseTest';
+import CustomAlert from '../components/CustomAlert';
 
 export const LoginScreen: React.FC = () => {
   const { signIn, signUp } = useAuth();
@@ -17,23 +17,40 @@ export const LoginScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  // Custom alert state
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'info'>('info');
+
+  const showAlert = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
+
+  const hideAlert = () => {
+    setAlertVisible(false);
+  };
 
   const handleAuth = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      showAlert('Error', 'Please fill in all fields', 'error');
       return;
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      showAlert('Error', 'Please enter a valid email address', 'error');
       return;
     }
 
     // Password validation for sign up
     if (isSignUp && password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long');
+      showAlert('Error', 'Password must be at least 6 characters long', 'error');
       return;
     }
 
@@ -41,13 +58,13 @@ export const LoginScreen: React.FC = () => {
     try {
       if (isSignUp) {
         await signUp(email, password);
-        Alert.alert('Success', 'Account created successfully!');
+        showAlert('Success', 'Account created successfully!', 'success');
       } else {
         await signIn(email, password);
       }
     } catch (error: any) {
       console.log('Auth error:', error);
-      Alert.alert('Error', error.message);
+      showAlert('Error', error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -110,12 +127,25 @@ export const LoginScreen: React.FC = () => {
             console.log('Testing Firebase connection...');
             checkFirebaseConfig();
             const result = await testFirebaseConnection();
-            Alert.alert('Firebase Test', result ? 'Connection successful!' : 'Connection failed. Check console for details.');
+            showAlert(
+              'Firebase Test', 
+              result ? 'Connection successful!' : 'Connection failed. Check console for details.',
+              result ? 'success' : 'error'
+            );
           }}
         >
           <Text style={styles.switchText}>🔧 Test Firebase Connection</Text>
         </TouchableOpacity>
       </View>
+      
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onConfirm={hideAlert}
+        confirmText="OK"
+      />
     </View>
   );
 };

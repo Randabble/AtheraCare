@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import CustomAlert from '../../components/CustomAlert';
 import { Text, Card, Button, ProgressBar, useTheme, Badge } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
@@ -15,6 +16,25 @@ const HomeScreen: React.FC = () => {
   const [hydration, setHydration] = useState(null);
   const [steps, setSteps] = useState(0);
   const [loading, setLoading] = useState(true);
+  
+  // Custom alert state
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertShowCancel, setAlertShowCancel] = useState(false);
+  const [alertOnConfirm, setAlertOnConfirm] = useState<(() => void) | null>(null);
+
+  const showAlert = (title: string, message: string, showCancel = false, onConfirm?: () => void) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertShowCancel(showCancel);
+    setAlertOnConfirm(onConfirm || (() => {}));
+    setAlertVisible(true);
+  };
+
+  const hideAlert = () => {
+    setAlertVisible(false);
+  };
 
   useEffect(() => {
     if (user) {
@@ -63,19 +83,14 @@ const HomeScreen: React.FC = () => {
   const stepsProgress = preferences.stepGoal > 0 ? steps / preferences.stepGoal : 0;
 
   const handleShareWin = (type: string) => {
-    Alert.alert(
+    showAlert(
       'Share This Win! 🎉',
       `Great job! Would you like to share your ${type} achievement with your family?`,
-      [
-        { text: 'Not now', style: 'cancel' },
-        { 
-          text: 'Share!', 
-          onPress: () => {
-            // TODO: Implement share functionality
-            Alert.alert('Shared!', 'Your family will see this win! 💕');
-          }
-        }
-      ]
+      true,
+      () => {
+        // TODO: Implement share functionality
+        showAlert('Shared!', 'Your family will see this win! 💕');
+      }
     );
   };
 
@@ -229,6 +244,23 @@ const HomeScreen: React.FC = () => {
           </View>
         </Card.Content>
       </Card>
+      
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onConfirm={() => {
+          if (alertOnConfirm) {
+            alertOnConfirm();
+          }
+          hideAlert();
+        }}
+        onCancel={hideAlert}
+        showCancel={alertShowCancel}
+        confirmText="OK"
+        cancelText="Cancel"
+      />
     </ScrollView>
   );
 };

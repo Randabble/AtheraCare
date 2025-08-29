@@ -1,51 +1,63 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Card, Button, List, Switch, Divider, useTheme } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
+import CustomAlert from '../../components/CustomAlert';
 
 const SettingsScreen: React.FC = () => {
   const { user, signOut } = useAuth();
   const { preferences, resetOnboarding } = useOnboarding();
   const theme = useTheme();
   const [showMedNames, setShowMedNames] = useState(false);
+  
+  // Custom alert state
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'info'>('info');
+  const [alertShowCancel, setAlertShowCancel] = useState(false);
+  const [alertOnConfirm, setAlertOnConfirm] = useState<(() => void) | null>(null);
+
+  const showAlert = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info', showCancel = false, onConfirm?: () => void) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertShowCancel(showCancel);
+    setAlertOnConfirm(onConfirm || (() => {}));
+    setAlertVisible(true);
+  };
+
+  const hideAlert = () => {
+    setAlertVisible(false);
+  };
 
   const handleSignOut = () => {
-    Alert.alert(
+    showAlert(
       'Sign Out',
       'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut();
-            } catch (error) {
-              console.error('Error signing out:', error);
-              Alert.alert('Error', 'Failed to sign out');
-            }
-          },
-        },
-      ]
+      'info',
+      true,
+      async () => {
+        try {
+          await signOut();
+        } catch (error) {
+          console.error('Error signing out:', error);
+          showAlert('Error', 'Failed to sign out', 'error');
+        }
+      }
     );
   };
 
   const handleResetOnboarding = () => {
-    Alert.alert(
+    showAlert(
       'Reset Onboarding',
       'This will reset all your preferences and take you back to the onboarding flow. Are you sure?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: () => {
-            resetOnboarding();
-          },
-        },
-      ]
+      'info',
+      true,
+      () => {
+        resetOnboarding();
+      }
     );
   };
 
@@ -70,7 +82,7 @@ const SettingsScreen: React.FC = () => {
             description={preferences?.displayName || 'Not set'}
             left={(props) => <List.Icon {...props} icon="account" />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => Alert.alert('Coming Soon', 'Name editing will be available in the next update.')}
+            onPress={() => showAlert('Coming Soon', 'Name editing will be available in the next update.')}
           />
           <Divider />
           <List.Item
@@ -94,7 +106,7 @@ const SettingsScreen: React.FC = () => {
             right={() => (
               <Switch
                 value={preferences?.medicationReminders || false}
-                onValueChange={() => Alert.alert('Coming Soon', 'Notification settings will be available in the next update.')}
+                onValueChange={() => showAlert('Coming Soon', 'Notification settings will be available in the next update.')}
               />
             )}
           />
@@ -106,7 +118,7 @@ const SettingsScreen: React.FC = () => {
             right={() => (
               <Switch
                 value={preferences?.quietHours || false}
-                onValueChange={() => Alert.alert('Coming Soon', 'Quiet hours settings will be available in the next update.')}
+                onValueChange={() => showAlert('Coming Soon', 'Quiet hours settings will be available in the next update.')}
               />
             )}
           />
@@ -124,7 +136,7 @@ const SettingsScreen: React.FC = () => {
             description={`${preferences?.waterGoal || 64} oz`}
             left={(props) => <List.Icon {...props} icon="water" />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => Alert.alert('Coming Soon', 'Goal editing will be available in the next update.')}
+            onPress={() => showAlert('Coming Soon', 'Goal editing will be available in the next update.')}
           />
           <Divider />
           <List.Item
@@ -132,7 +144,7 @@ const SettingsScreen: React.FC = () => {
             description={`${(preferences?.stepGoal || 10000).toLocaleString()} steps`}
             left={(props) => <List.Icon {...props} icon="walk" />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => Alert.alert('Coming Soon', 'Goal editing will be available in the next update.')}
+            onPress={() => showAlert('Coming Soon', 'Goal editing will be available in the next update.')}
           />
         </Card.Content>
       </Card>
@@ -150,7 +162,7 @@ const SettingsScreen: React.FC = () => {
             right={() => (
               <Switch
                 value={preferences?.shareWins || false}
-                onValueChange={() => Alert.alert('Coming Soon', 'Sharing settings will be available in the next update.')}
+                onValueChange={() => showAlert('Coming Soon', 'Sharing settings will be available in the next update.')}
               />
             )}
           />
@@ -160,7 +172,7 @@ const SettingsScreen: React.FC = () => {
             description={preferences?.familyConnection ? 'Connected' : 'Not connected'}
             left={(props) => <List.Icon {...props} icon="account-group" />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => Alert.alert('Coming Soon', 'Family management will be available in the next update.')}
+            onPress={() => showAlert('Coming Soon', 'Family management will be available in the next update.')}
           />
           <Divider />
           <List.Item
@@ -190,7 +202,7 @@ const SettingsScreen: React.FC = () => {
             right={() => (
               <Switch
                 value={preferences?.privacyMode || false}
-                onValueChange={() => Alert.alert('Coming Soon', 'Privacy settings will be available in the next update.')}
+                onValueChange={() => showAlert('Coming Soon', 'Privacy settings will be available in the next update.')}
               />
             )}
           />
@@ -200,7 +212,7 @@ const SettingsScreen: React.FC = () => {
             description={preferences?.syncMode === 'automatic' ? 'Automatic' : 'Manual'}
             left={(props) => <List.Icon {...props} icon="sync" />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => Alert.alert('Coming Soon', 'Sync settings will be available in the next update.')}
+            onPress={() => showAlert('Coming Soon', 'Sync settings will be available in the next update.')}
           />
         </Card.Content>
       </Card>
@@ -237,6 +249,23 @@ const SettingsScreen: React.FC = () => {
           </Text>
         </Card.Content>
       </Card>
+      
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onConfirm={() => {
+          if (alertOnConfirm) {
+            alertOnConfirm();
+          }
+          hideAlert();
+        }}
+        onCancel={hideAlert}
+        showCancel={alertShowCancel}
+        confirmText="OK"
+        cancelText="Cancel"
+      />
     </ScrollView>
   );
 };
