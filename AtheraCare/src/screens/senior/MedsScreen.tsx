@@ -113,10 +113,10 @@ const MedsScreen: React.FC = () => {
       await updateMedicationTracking(user.uid, today, totalMeds, takenMeds, 0); // TODO: Calculate actual streak
       
       await loadMedications();
-      Alert.alert('Great job! 🎉', 'Medication marked as taken!');
+      showAlert('Great job! 🎉', 'Medication marked as taken!');
     } catch (error) {
       console.error('Error marking medication taken:', error);
-      Alert.alert('Error', 'Failed to mark medication as taken');
+      showAlert('Error', 'Failed to mark medication as taken');
     } finally {
       setLoading(false);
     }

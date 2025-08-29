@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Button, Chip, useTheme, SegmentedButtons } from 'react-native-paper';
+import { Text, Card, Button, Chip, useTheme, SegmentedButtons, ProgressBar } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
+import { Pedometer } from 'expo-sensors';
 import { 
   DailyActivity, 
   WeeklyStats,
@@ -33,6 +34,10 @@ const ActivityTrackerScreen: React.FC = () => {
   const [selectedWeek, setSelectedWeek] = useState<'current' | 'previous'>('current');
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [selectedEnergy, setSelectedEnergy] = useState<number | null>(null);
+  
+  // Step tracking state
+  const [steps, setSteps] = useState(0);
+  const [isPedometerAvailable, setIsPedometerAvailable] = useState(false);
   
   // Custom alert state
   const [alertVisible, setAlertVisible] = useState(false);
@@ -95,8 +100,39 @@ const ActivityTrackerScreen: React.FC = () => {
   useEffect(() => {
     if (user) {
       loadActivityData();
+      checkPedometerAvailability();
     }
   }, [user, selectedWeek]);
+
+  const checkPedometerAvailability = async () => {
+    try {
+      const isAvailable = await Pedometer.isAvailableAsync();
+      setIsPedometerAvailable(isAvailable);
+      
+      if (isAvailable) {
+        // Start listening to step updates
+        const subscription = Pedometer.watchStepCount(async (result) => {
+          setSteps(result.steps);
+          
+          // Update activity tracker
+          if (user) {
+            try {
+              const today = new Date().toISOString().split('T')[0];
+              await updateStepsTracking(user.uid, today, result.steps, preferences.stepGoal || 10000, 0); // TODO: Calculate actual streak
+            } catch (error) {
+              console.error('Error updating steps tracking:', error);
+            }
+          }
+        });
+        
+        // Cleanup subscription on unmount
+        return () => subscription && subscription.remove();
+      }
+    } catch (error) {
+      console.error('Error checking pedometer availability:', error);
+      setIsPedometerAvailable(false);
+    }
+  };
 
   const loadActivityData = async () => {
     if (!user) return;
@@ -265,6 +301,46 @@ const ActivityTrackerScreen: React.FC = () => {
       <Text variant="bodyLarge" style={styles.subtitle}>
         Track your daily progress and weekly trends
       </Text>
+
+      {/* Today's Steps Card */}
+      <Card style={styles.card}>
+        <Card.Content>
+          <Text variant="titleMedium" style={styles.sectionTitle}>
+            👟 Today's Steps
+          </Text>
+          
+          <View style={styles.stepsHeader}>
+            <Text variant="headlineLarge" style={styles.stepsAmount}>
+              {steps.toLocaleString()}
+            </Text>
+            <Text variant="bodyMedium" style={styles.goalText}>
+              Goal: {(preferences.stepGoal || 10000).toLocaleString()} steps
+            </Text>
+          </View>
+          
+          <ProgressBar 
+            progress={(preferences.stepGoal || 10000) > 0 ? steps / (preferences.stepGoal || 10000) : 0} 
+            color={theme.colors.primary}
+            style={styles.progressBar}
+          />
+          
+          <Text variant="bodyMedium" style={styles.percentageText}>
+            {Math.round(((preferences.stepGoal || 10000) > 0 ? steps / (preferences.stepGoal || 10000) : 0) * 100)}% of daily goal
+          </Text>
+          
+          <View style={styles.pedometerStatus}>
+            {isPedometerAvailable ? (
+              <Text variant="bodySmall" style={styles.statusText}>
+                ✅ Pedometer is available and tracking your steps
+              </Text>
+            ) : (
+              <Text variant="bodySmall" style={styles.statusText}>
+                ⚠️ Pedometer not available on this device
+              </Text>
+            )}
+          </View>
+        </Card.Content>
+      </Card>
 
       {/* Firebase Test Button - Remove this after fixing permissions */}
       <Card style={styles.card}>
@@ -616,6 +692,37 @@ const styles = StyleSheet.create({
   },
   captionText: {
     fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  stepsHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  stepsAmount: {
+    color: '#007AFF',
+    marginVertical: 10,
+  },
+  goalText: {
+    color: '#666',
+    marginBottom: 15,
+  },
+  progressBar: {
+    height: 12,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+  percentageText: {
+    textAlign: 'center',
+    color: '#666',
+    fontWeight: '500',
+    marginBottom: 10,
+  },
+  pedometerStatus: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  statusText: {
     color: '#666',
     textAlign: 'center',
   },
