@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Card, Button, TextInput, Chip, FAB, List, IconButton, Badge, useTheme } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMedications, addMedication, deleteMedication, markMedicationTaken, Medication } from '../../utils/medications';
 import { updateMedicationTracking } from '../../utils/activityTracker';
+import CustomAlert from '../../components/CustomAlert';
 
 const MedsScreen: React.FC = () => {
   const { user } = useAuth();
@@ -13,6 +14,21 @@ const MedsScreen: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMedName, setNewMedName] = useState('');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
+
+  const hideAlert = () => {
+    setAlertVisible(false);
+    setPendingDeleteId(null);
+  };
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -31,7 +47,7 @@ const MedsScreen: React.FC = () => {
       setMedications(meds);
     } catch (error) {
       console.error('Error loading medications:', error);
-      Alert.alert('Error', 'Failed to load medications');
+      showAlert('Error', 'Failed to load medications');
     } finally {
       setLoading(false);
     }
@@ -39,7 +55,7 @@ const MedsScreen: React.FC = () => {
 
   const handleAddMedication = async () => {
     if (!user || !newMedName.trim() || selectedDays.length === 0) {
-      Alert.alert('Error', 'Please enter a medication name and select days');
+      showAlert('Error', 'Please enter a medication name and select days');
       return;
     }
 
@@ -50,40 +66,35 @@ const MedsScreen: React.FC = () => {
       setSelectedDays([]);
       setShowAddForm(false);
       await loadMedications();
-      Alert.alert('Success', 'Medication added successfully! 💊');
+      showAlert('Success', 'Medication added successfully! 💊');
     } catch (error) {
       console.error('Error adding medication:', error);
-      Alert.alert('Error', 'Failed to add medication');
+      showAlert('Error', 'Failed to add medication');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteMedication = async (medicationId: string) => {
-    Alert.alert(
-      'Delete Medication',
-      'Are you sure you want to delete this medication?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await deleteMedication(medicationId);
-              await loadMedications();
-              Alert.alert('Success', 'Medication deleted');
-            } catch (error) {
-              console.error('Error deleting medication:', error);
-              Alert.alert('Error', 'Failed to delete medication');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
+    setPendingDeleteId(medicationId);
+    showAlert('Delete Medication', 'Are you sure you want to delete this medication?');
+  };
+
+  const confirmDeleteMedication = async () => {
+    if (!pendingDeleteId) return;
+    
+    try {
+      setLoading(true);
+      await deleteMedication(pendingDeleteId);
+      await loadMedications();
+      showAlert('Success', 'Medication deleted');
+    } catch (error) {
+      console.error('Error deleting medication:', error);
+      showAlert('Error', 'Failed to delete medication');
+    } finally {
+      setLoading(false);
+    }
+    hideAlert();
   };
 
   const handleMarkTaken = async (medicationId: string) => {
@@ -290,6 +301,17 @@ const MedsScreen: React.FC = () => {
         style={styles.fab}
         onPress={() => setShowAddForm(!showAddForm)}
         label={showAddForm ? 'Close' : 'Add Med'}
+      />
+      
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onConfirm={alertTitle === 'Delete Medication' ? confirmDeleteMedication : hideAlert}
+        onCancel={hideAlert}
+        showCancel={alertTitle === 'Delete Medication'}
+        confirmText={alertTitle === 'Delete Medication' ? 'Delete' : 'OK'}
+        cancelText="Cancel"
       />
     </View>
   );

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Card, Button, ProgressBar, TextInput, useTheme } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { getTodayHydration, addWater, resetTodayWater, updateWaterGoal } from '../../utils/hydration';
 import { updateWaterTracking } from '../../utils/activityTracker';
+import CustomAlert from '../../components/CustomAlert';
 
 const WaterScreen: React.FC = () => {
   const { user } = useAuth();
@@ -15,6 +16,19 @@ const WaterScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showGoalInput, setShowGoalInput] = useState(false);
   const [newGoal, setNewGoal] = useState('');
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
+
+  const hideAlert = () => {
+    setAlertVisible(false);
+  };
 
   const quickAmounts = [8, 12, 16, 20];
 
@@ -44,7 +58,7 @@ const WaterScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading hydration:', error);
-      Alert.alert('Error', 'Failed to load hydration data');
+      showAlert('Error', 'Failed to load hydration data');
     } finally {
       setLoading(false);
     }
@@ -63,10 +77,10 @@ const WaterScreen: React.FC = () => {
       await updateWaterTracking(user.uid, today, newTotal, waterGoal, 0); // TODO: Calculate actual streak
       
       await loadHydration();
-      Alert.alert('Success', `Added ${amount} oz of water! 💧`);
+      showAlert('Success', `Added ${amount} oz of water! 💧`);
     } catch (error) {
       console.error('Error adding water:', error);
-      Alert.alert('Error', 'Failed to add water');
+      showAlert('Error', 'Failed to add water');
     } finally {
       setLoading(false);
     }
@@ -75,30 +89,27 @@ const WaterScreen: React.FC = () => {
   const handleResetWater = async () => {
     if (!user) return;
 
-    Alert.alert(
+    showAlert(
       'Reset Water Intake',
-      'Are you sure you want to reset today\'s water intake?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await resetTodayWater(user.uid);
-              await loadHydration();
-              Alert.alert('Success', 'Water intake reset!');
-            } catch (error) {
-              console.error('Error resetting water:', error);
-              Alert.alert('Error', 'Failed to reset water intake');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
+      'Are you sure you want to reset today\'s water intake?'
     );
+  };
+
+  const confirmResetWater = async () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
+      await resetTodayWater(user.uid);
+      await loadHydration();
+      showAlert('Success', 'Water intake reset!');
+    } catch (error) {
+      console.error('Error resetting water:', error);
+      showAlert('Error', 'Failed to reset water intake');
+    } finally {
+      setLoading(false);
+    }
+    hideAlert();
   };
 
   const handleUpdateGoal = async () => {
@@ -106,7 +117,7 @@ const WaterScreen: React.FC = () => {
 
     const goal = parseInt(newGoal);
     if (isNaN(goal) || goal <= 0) {
-      Alert.alert('Error', 'Please enter a valid goal amount');
+      showAlert('Error', 'Please enter a valid goal amount');
       return;
     }
 
@@ -116,10 +127,10 @@ const WaterScreen: React.FC = () => {
       setWaterGoal(goal);
       setShowGoalInput(false);
       setNewGoal('');
-      Alert.alert('Success', `Water goal updated to ${goal} oz!`);
+      showAlert('Success', `Water goal updated to ${goal} oz!`);
     } catch (error) {
       console.error('Error updating water goal:', error);
-      Alert.alert('Error', 'Failed to update water goal');
+      showAlert('Error', 'Failed to update water goal');
     } finally {
       setLoading(false);
     }
@@ -284,6 +295,17 @@ const WaterScreen: React.FC = () => {
           </Card.Content>
         </Card>
       )}
+      
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onConfirm={alertTitle === 'Reset Water Intake' ? confirmResetWater : hideAlert}
+        onCancel={hideAlert}
+        showCancel={alertTitle === 'Reset Water Intake'}
+        confirmText={alertTitle === 'Reset Water Intake' ? 'Reset' : 'OK'}
+        cancelText="Cancel"
+      />
     </ScrollView>
   );
 };

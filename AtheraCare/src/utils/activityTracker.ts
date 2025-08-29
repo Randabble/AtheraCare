@@ -80,7 +80,8 @@ export const saveDailyActivity = async (
     const docRef = doc(db, 'dailyActivities', `${userId}_${date}`);
     const now = Timestamp.now();
     
-    const activity: DailyActivity = {
+    // Create a clean activity object with only valid Firestore values
+    const activity: any = {
       date,
       userId,
       medications: {
@@ -88,33 +89,41 @@ export const saveDailyActivity = async (
         taken: 0,
         missed: 0,
         streak: 0,
-        ...activityData.medications
+        ...(activityData.medications || {})
       },
       water: {
         totalOz: 0,
         goalOz: 64,
         percentage: 0,
         streak: 0,
-        ...activityData.water
+        ...(activityData.water || {})
       },
       steps: {
         count: 0,
         goal: 10000,
         percentage: 0,
         streak: 0,
-        ...activityData.steps
+        ...(activityData.steps || {})
       },
-      mood: activityData.mood,
-      energy: activityData.energy,
       createdAt: now,
       updatedAt: now
     };
+
+    // Only add mood and energy if they are valid numbers
+    if (activityData.mood !== undefined && activityData.mood !== null) {
+      activity.mood = activityData.mood;
+    }
+    if (activityData.energy !== undefined && activityData.energy !== null) {
+      activity.energy = activityData.energy;
+    }
 
     await setDoc(docRef, activity);
     console.log('Daily activity saved for:', date);
   } catch (error) {
     console.error('Error saving daily activity:', error);
-    throw error;
+    // Log the error but don't throw to prevent app crashes
+    // This allows the app to continue working even if activity tracking fails
+    console.warn('Activity tracking failed, but app will continue to function');
   }
 };
 
@@ -133,7 +142,22 @@ export const getDailyActivity = async (
     return null;
   } catch (error) {
     console.error('Error getting daily activity:', error);
-    throw error;
+    
+    // Check if it's a permissions error
+    if (error instanceof Error) {
+      if (error.message.includes('permission') || error.message.includes('insufficient')) {
+        console.error('Firebase permissions error - check security rules for dailyActivities collection');
+        console.error('User ID:', userId, 'Date:', date);
+      } else if (error.message.includes('network') || error.message.includes('unavailable')) {
+        console.error('Firebase network error - check internet connection');
+      } else {
+        console.error('Unknown Firebase error:', error.message);
+      }
+    }
+    
+    // Return null instead of throwing to prevent app crashes
+    // This allows the app to continue working even if there are permission issues
+    return null;
   }
 };
 
@@ -289,10 +313,26 @@ export const updateMedicationTracking = async (
   };
 
   if (existingActivity) {
-    await saveDailyActivity(userId, date, {
-      ...existingActivity,
-      medications: medicationData
-    });
+    // Create a clean object without undefined values
+    const cleanActivity: any = {
+      date: existingActivity.date,
+      userId: existingActivity.userId,
+      medications: medicationData,
+      water: existingActivity.water,
+      steps: existingActivity.steps,
+      createdAt: existingActivity.createdAt,
+      updatedAt: existingActivity.updatedAt
+    };
+
+    // Only add mood and energy if they are valid numbers
+    if (existingActivity.mood !== undefined && existingActivity.mood !== null) {
+      cleanActivity.mood = existingActivity.mood;
+    }
+    if (existingActivity.energy !== undefined && existingActivity.energy !== null) {
+      cleanActivity.energy = existingActivity.energy;
+    }
+
+    await saveDailyActivity(userId, date, cleanActivity);
   } else {
     await saveDailyActivity(userId, date, { medications: medicationData });
   }
@@ -317,10 +357,26 @@ export const updateWaterTracking = async (
   };
 
   if (existingActivity) {
-    await saveDailyActivity(userId, date, {
-      ...existingActivity,
-      water: waterData
-    });
+    // Create a clean object without undefined values
+    const cleanActivity: any = {
+      date: existingActivity.date,
+      userId: existingActivity.userId,
+      medications: existingActivity.medications,
+      water: waterData,
+      steps: existingActivity.steps,
+      createdAt: existingActivity.createdAt,
+      updatedAt: existingActivity.updatedAt
+    };
+
+    // Only add mood and energy if they are valid numbers
+    if (existingActivity.mood !== undefined && existingActivity.mood !== null) {
+      cleanActivity.mood = existingActivity.mood;
+    }
+    if (existingActivity.energy !== undefined && existingActivity.energy !== null) {
+      cleanActivity.energy = existingActivity.energy;
+    }
+
+    await saveDailyActivity(userId, date, cleanActivity);
   } else {
     await saveDailyActivity(userId, date, { water: waterData });
   }
@@ -345,10 +401,26 @@ export const updateStepsTracking = async (
   };
 
   if (existingActivity) {
-    await saveDailyActivity(userId, date, {
-      ...existingActivity,
-      steps: stepsData
-    });
+    // Create a clean object without undefined values
+    const cleanActivity: any = {
+      date: existingActivity.date,
+      userId: existingActivity.userId,
+      medications: existingActivity.medications,
+      water: existingActivity.water,
+      steps: stepsData,
+      createdAt: existingActivity.createdAt,
+      updatedAt: existingActivity.updatedAt
+    };
+
+    // Only add mood and energy if they are valid numbers
+    if (existingActivity.mood !== undefined && existingActivity.mood !== null) {
+      cleanActivity.mood = existingActivity.mood;
+    }
+    if (existingActivity.energy !== undefined && existingActivity.energy !== null) {
+      cleanActivity.energy = existingActivity.energy;
+    }
+
+    await saveDailyActivity(userId, date, cleanActivity);
   } else {
     await saveDailyActivity(userId, date, { steps: stepsData });
   }
@@ -364,13 +436,36 @@ export const updateMoodEnergy = async (
   const existingActivity = await getDailyActivity(userId, date);
   
   if (existingActivity) {
-    await saveDailyActivity(userId, date, {
-      ...existingActivity,
-      mood,
-      energy
-    });
+    // Create a clean object without undefined values
+    const cleanActivity: any = {
+      date: existingActivity.date,
+      userId: existingActivity.userId,
+      medications: existingActivity.medications,
+      water: existingActivity.water,
+      steps: existingActivity.steps,
+      createdAt: existingActivity.createdAt,
+      updatedAt: existingActivity.updatedAt
+    };
+
+    // Only add mood and energy if they are valid numbers
+    if (mood !== undefined && mood !== null) {
+      cleanActivity.mood = mood;
+    }
+    if (energy !== undefined && energy !== null) {
+      cleanActivity.energy = energy;
+    }
+
+    await saveDailyActivity(userId, date, cleanActivity);
   } else {
-    await saveDailyActivity(userId, date, { mood, energy });
+    // Only add mood and energy if they are valid numbers
+    const newActivity: any = {};
+    if (mood !== undefined && mood !== null) {
+      newActivity.mood = mood;
+    }
+    if (energy !== undefined && energy !== null) {
+      newActivity.energy = energy;
+    }
+    await saveDailyActivity(userId, date, newActivity);
   }
 };
 
