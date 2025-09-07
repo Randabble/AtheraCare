@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Card, Button, ProgressBar, useTheme } from 'react-native-paper';
+import { Text, Button, ProgressBar, useTheme } from 'react-native-paper';
+import ModernCard from '../../components/ModernCard';
+import ProgressRing from '../../components/ProgressRing';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { Pedometer } from 'expo-sensors';
 import { updateStepsTracking } from '../../utils/activityTracker';
+import { Colors, Spacing, BorderRadius } from '../../theme/colors';
+import { StepsIcon, TrophyIcon } from '../../components/icons/ModernIcons';
 
 const StepsScreen: React.FC = () => {
   const { user } = useAuth();
@@ -96,19 +100,22 @@ const StepsScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text variant="headlineMedium" style={styles.title}>
-        👟 Step Tracker
-      </Text>
-      
-      <Text variant="bodyLarge" style={styles.subtitle}>
-        Track your daily activity
-      </Text>
+      <View style={styles.header}>
+        <Text variant="headlineLarge" style={styles.title}>
+          Step Tracker
+        </Text>
+        <Text variant="bodyLarge" style={styles.subtitle}>
+          Track your daily activity
+        </Text>
+      </View>
 
       {/* Today's Steps Card */}
-      <Card style={styles.stepsCard}>
-        <Card.Content>
-          <View style={styles.stepsHeader}>
-            <Text variant="titleLarge">Today's Steps</Text>
+      <ModernCard style={styles.stepsCard}>
+        <View style={styles.stepsHeader}>
+          <View style={styles.stepsIconContainer}>
+            <StepsIcon size={48} color={Colors.stepsPrimary} />
+          </View>
+          <View style={styles.stepsInfo}>
             <Text variant="headlineLarge" style={styles.stepsAmount}>
               {steps.toLocaleString()}
             </Text>
@@ -116,109 +123,106 @@ const StepsScreen: React.FC = () => {
               Goal: {preferences.stepGoal.toLocaleString()} steps
             </Text>
           </View>
-          
-          <ProgressBar 
-            progress={progress} 
-            color={theme.colors.primary}
-            style={styles.progressBar}
-          />
-          
-          <Text variant="bodyMedium" style={styles.percentageText}>
-            {percentage}% of daily goal
-          </Text>
-          
-          {progress >= 1 && (
-            <Button
-              mode="contained"
-              onPress={() => Alert.alert('🎉 Goal Achieved!', 'Congratulations on reaching your step goal!')}
-              style={styles.celebrationButton}
-              icon="trophy"
-            >
-              Goal Achieved! 🎉
-            </Button>
-          )}
-        </Card.Content>
-      </Card>
+        </View>
+        
+        <ProgressRing
+          progress={progress}
+          size={120}
+          strokeWidth={8}
+          color={Colors.stepsPrimary}
+          centerText={`${percentage}%`}
+          centerSubtext="Complete"
+        />
+        
+        <Text variant="bodyMedium" style={styles.percentageText}>
+          {percentage}% of daily goal
+        </Text>
+        
+        {progress >= 1 && (
+          <Button
+            mode="contained"
+            onPress={() => Alert.alert('🎉 Goal Achieved!', 'Congratulations on reaching your step goal!')}
+            style={styles.celebrationButton}
+            buttonColor={Colors.stepsPrimary}
+            icon={() => <TrophyIcon size={16} color="white" />}
+          >
+            Goal Achieved! 🎉
+          </Button>
+        )}
+      </ModernCard>
 
       {/* Weekly Chart */}
-      <Card style={styles.chartCard}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            This Week's Progress
-          </Text>
-          
-          <View style={styles.chartContainer}>
-            {weeklyData.map((day, index) => (
-              <View key={index} style={styles.chartBar}>
-                <View style={styles.barContainer}>
-                  <View 
-                    style={[
-                      styles.bar, 
-                      { 
-                        height: maxSteps > 0 ? (day.steps / maxSteps) * 100 : 0,
-                        backgroundColor: day.steps >= preferences.stepGoal ? '#4CAF50' : theme.colors.primary
-                      }
-                    ]} 
-                  />
-                </View>
-                <Text variant="bodySmall" style={styles.dayLabel}>
-                  {day.day}
-                </Text>
-                <Text variant="bodySmall" style={styles.stepsLabel}>
-                  {day.steps.toLocaleString()}
-                </Text>
+      <ModernCard 
+        title="This Week's Progress"
+        style={styles.chartCard}
+      >
+        <View style={styles.chartContainer}>
+          {weeklyData.map((day, index) => (
+            <View key={index} style={styles.chartBar}>
+              <View style={styles.barContainer}>
+                <View 
+                  style={[
+                    styles.bar, 
+                    { 
+                      height: maxSteps > 0 ? (day.steps / maxSteps) * 100 : 0,
+                      backgroundColor: day.steps >= preferences.stepGoal ? Colors.success : Colors.stepsPrimary
+                    }
+                  ]} 
+                />
               </View>
-            ))}
-          </View>
-        </Card.Content>
-      </Card>
+              <Text variant="bodySmall" style={styles.dayLabel}>
+                {day.day}
+              </Text>
+              <Text variant="bodySmall" style={styles.stepsLabel}>
+                {day.steps.toLocaleString()}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </ModernCard>
 
       {/* Pedometer Status */}
-      <Card style={styles.statusCard}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Device Status
-          </Text>
-          
-          {isPedometerAvailable ? (
-            <View style={styles.statusRow}>
-              <Text variant="bodyMedium" style={styles.statusText}>
-                ✅ Pedometer is available and tracking your steps
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.statusRow}>
-              <Text variant="bodyMedium" style={styles.statusText}>
-                ⚠️ Pedometer not available on this device
-              </Text>
-              <Text variant="bodySmall" style={styles.statusSubtext}>
-                Steps will be manually entered or synced from your device's health app
-              </Text>
-            </View>
-          )}
-        </Card.Content>
-      </Card>
+      <ModernCard 
+        title="Device Status"
+        style={styles.statusCard}
+      >
+        {isPedometerAvailable ? (
+          <View style={styles.statusRow}>
+            <Text variant="bodyMedium" style={styles.statusText}>
+              ✅ Pedometer is available and tracking your steps
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.statusRow}>
+            <Text variant="bodyMedium" style={styles.statusText}>
+              ⚠️ Pedometer not available on this device
+            </Text>
+            <Text variant="bodySmall" style={styles.statusSubtext}>
+              Steps will be manually entered or synced from your device's health app
+            </Text>
+          </View>
+        )}
+      </ModernCard>
 
       {/* Manual Entry (for devices without pedometer) */}
       {!isPedometerAvailable && (
-        <Card style={styles.manualCard}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              Manual Step Entry
-            </Text>
-            <Text variant="bodyMedium" style={styles.manualText}>
-              Since your device doesn't have a pedometer, you can manually enter your steps or sync from your health app.
-            </Text>
-            <Button
-              mode="outlined"
-              onPress={() => Alert.alert('Coming Soon', 'Manual step entry will be available in the next update.')}
-              style={styles.manualButton}
-              icon="plus"
-            >
-              Add Steps Manually
-            </Button>
-          </Card.Content>
-        </Card>
+        <ModernCard 
+          title="Manual Step Entry"
+          style={styles.manualCard}
+        >
+          <Text variant="bodyMedium" style={styles.manualText}>
+            Since your device doesn't have a pedometer, you can manually enter your steps or sync from your health app.
+          </Text>
+          <Button
+            mode="outlined"
+            onPress={() => Alert.alert('Coming Soon', 'Manual step entry will be available in the next update.')}
+            style={styles.manualButton}
+            buttonColor={Colors.stepsPrimary}
+            textColor={Colors.stepsPrimary}
+          >
+            Add Steps Manually
+          </Button>
+        </ModernCard>
       )}
     </ScrollView>
   );
@@ -227,73 +231,77 @@ const StepsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  header: {
+    marginBottom: Spacing.lg,
+  },
   title: {
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
+    color: Colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
   },
   subtitle: {
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#666',
+    color: Colors.textSecondary,
   },
   stepsCard: {
-    marginBottom: 20,
-    elevation: 2,
+    backgroundColor: Colors.stepsBackground,
+    marginBottom: Spacing.lg,
   },
   stepsHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  stepsIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.stepsPrimary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepsInfo: {
+    flex: 1,
   },
   stepsAmount: {
-    color: '#4CAF50',
-    marginVertical: 10,
-    fontWeight: 'bold',
+    color: Colors.stepsPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
   },
   goalText: {
-    color: '#666',
-    marginBottom: 15,
-  },
-  progressBar: {
-    height: 12,
-    borderRadius: 6,
-    marginBottom: 10,
+    color: Colors.textSecondary,
   },
   percentageText: {
     textAlign: 'center',
-    color: '#666',
+    color: Colors.textSecondary,
     fontWeight: '500',
-    marginBottom: 15,
+    marginTop: Spacing.md,
   },
   celebrationButton: {
-    backgroundColor: '#4CAF50',
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.md,
   },
   chartCard: {
-    marginBottom: 20,
-    elevation: 2,
-  },
-  sectionTitle: {
-    marginBottom: 15,
-    color: '#333',
-    fontWeight: '500',
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
   },
   chartContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'flex-end',
     height: 120,
-    paddingTop: 20,
+    paddingTop: Spacing.lg,
   },
   chartBar: {
     alignItems: 'center',
@@ -302,7 +310,7 @@ const styles = StyleSheet.create({
   barContainer: {
     height: 80,
     justifyContent: 'flex-end',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   bar: {
     width: 20,
@@ -310,41 +318,42 @@ const styles = StyleSheet.create({
     minHeight: 4,
   },
   dayLabel: {
-    color: '#666',
+    color: Colors.textSecondary,
     fontSize: 12,
     marginBottom: 4,
   },
   stepsLabel: {
-    color: '#333',
+    color: Colors.textPrimary,
     fontSize: 10,
     textAlign: 'center',
   },
   statusCard: {
-    marginBottom: 20,
-    elevation: 2,
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
   },
   statusRow: {
-    marginBottom: 10,
+    marginBottom: Spacing.sm,
   },
   statusText: {
-    color: '#333',
+    color: Colors.textPrimary,
     marginBottom: 5,
   },
   statusSubtext: {
-    color: '#666',
+    color: Colors.textSecondary,
     fontSize: 12,
   },
   manualCard: {
-    marginBottom: 20,
-    elevation: 2,
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
   },
   manualText: {
-    color: '#666',
-    marginBottom: 15,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
     lineHeight: 20,
   },
   manualButton: {
     alignSelf: 'center',
+    borderRadius: BorderRadius.md,
   },
 });
 

@@ -1,15 +1,26 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, Button, List, Switch, Divider, useTheme } from 'react-native-paper';
+import { Text, Button, List, Switch, Divider, useTheme, TextInput } from 'react-native-paper';
+import ModernCard from '../../components/ModernCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import CustomAlert from '../../components/CustomAlert';
+import { Colors, Spacing, BorderRadius } from '../../theme/colors';
+import { SettingsIcon } from '../../components/icons/ModernIcons';
 
 const SettingsScreen: React.FC = () => {
   const { user, signOut } = useAuth();
-  const { preferences, resetOnboarding } = useOnboarding();
+  const { preferences, resetOnboarding, updatePreferences } = useOnboarding();
   const theme = useTheme();
+  
+  // Settings state
   const [showMedNames, setShowMedNames] = useState(false);
+  const [editingDisplayName, setEditingDisplayName] = useState(false);
+  const [editingWaterGoal, setEditingWaterGoal] = useState(false);
+  const [editingStepGoal, setEditingStepGoal] = useState(false);
+  const [newDisplayName, setNewDisplayName] = useState(preferences?.displayName || '');
+  const [newWaterGoal, setNewWaterGoal] = useState(preferences?.waterGoal?.toString() || '64');
+  const [newStepGoal, setNewStepGoal] = useState(preferences?.stepGoal?.toString() || '10000');
   
   // Custom alert state
   const [alertVisible, setAlertVisible] = useState(false);
@@ -61,173 +72,333 @@ const SettingsScreen: React.FC = () => {
     );
   };
 
+  const handleUpdateDisplayName = () => {
+    if (newDisplayName.trim() && updatePreferences) {
+      updatePreferences({ displayName: newDisplayName.trim() });
+      setEditingDisplayName(false);
+      showAlert('Success', 'Display name updated successfully!', 'success');
+    } else {
+      showAlert('Error', 'Please enter a valid display name', 'error');
+    }
+  };
+
+  const handleUpdateWaterGoal = () => {
+    const goal = parseInt(newWaterGoal);
+    if (goal > 0 && updatePreferences) {
+      updatePreferences({ waterGoal: goal });
+      setEditingWaterGoal(false);
+      showAlert('Success', 'Water goal updated successfully!', 'success');
+    } else {
+      showAlert('Error', 'Please enter a valid water goal', 'error');
+    }
+  };
+
+  const handleUpdateStepGoal = () => {
+    const goal = parseInt(newStepGoal);
+    if (goal > 0 && updatePreferences) {
+      updatePreferences({ stepGoal: goal });
+      setEditingStepGoal(false);
+      showAlert('Success', 'Step goal updated successfully!', 'success');
+    } else {
+      showAlert('Error', 'Please enter a valid step goal', 'error');
+    }
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text variant="headlineMedium" style={styles.title}>
-        ⚙️ Settings
-      </Text>
-      
-      <Text variant="bodyLarge" style={styles.subtitle}>
-        Customize your experience
-      </Text>
+      <View style={styles.header}>
+        <Text variant="headlineLarge" style={styles.title}>
+          Settings
+        </Text>
+        <Text variant="bodyLarge" style={styles.subtitle}>
+          Customize your experience
+        </Text>
+      </View>
 
       {/* Profile Section */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Profile
-          </Text>
-          <List.Item
-            title="Display Name"
-            description={preferences?.displayName || 'Not set'}
-            left={(props) => <List.Icon {...props} icon="account" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => showAlert('Coming Soon', 'Name editing will be available in the next update.')}
-          />
-          <Divider />
-          <List.Item
-            title="Email"
-            description={user?.email || 'Not set'}
-            left={(props) => <List.Icon {...props} icon="email" />}
-          />
-        </Card.Content>
-      </Card>
-
-      {/* Notifications Section */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Notifications
-          </Text>
-          <List.Item
-            title="Medication Reminders"
-            description={preferences?.medicationReminders ? 'Enabled' : 'Disabled'}
-            left={(props) => <List.Icon {...props} icon="bell" />}
-            right={() => (
-              <Switch
-                value={preferences?.medicationReminders || false}
-                onValueChange={() => showAlert('Coming Soon', 'Notification settings will be available in the next update.')}
+      <ModernCard 
+        title="Profile"
+        style={styles.card}
+      >
+        <View style={styles.settingsIcon}>
+          <SettingsIcon size={32} color={Colors.primary} />
+        </View>
+        
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Display Name</Text>
+          {editingDisplayName ? (
+            <View style={styles.editRow}>
+              <TextInput
+                value={newDisplayName}
+                onChangeText={setNewDisplayName}
+                style={styles.editInput}
+                mode="outlined"
+                autoFocus
               />
-            )}
-          />
-          <Divider />
-          <List.Item
-            title="Quiet Hours"
-            description={preferences?.quietHours ? 'Enabled' : 'Disabled'}
-            left={(props) => <List.Icon {...props} icon="moon" />}
-            right={() => (
-              <Switch
-                value={preferences?.quietHours || false}
-                onValueChange={() => showAlert('Coming Soon', 'Quiet hours settings will be available in the next update.')}
-              />
-            )}
-          />
-        </Card.Content>
-      </Card>
+              <Button
+                mode="contained"
+                onPress={handleUpdateDisplayName}
+                style={styles.saveButton}
+                buttonColor={Colors.primary}
+              >
+                Save
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => {
+                  setEditingDisplayName(false);
+                  setNewDisplayName(preferences?.displayName || '');
+                }}
+                style={styles.cancelButton}
+              >
+                Cancel
+              </Button>
+            </View>
+          ) : (
+            <View style={styles.valueRow}>
+              <Text variant="bodyMedium" style={styles.settingValue}>
+                {preferences?.displayName || 'Not set'}
+              </Text>
+              <Button
+                mode="outlined"
+                onPress={() => setEditingDisplayName(true)}
+                style={styles.editButton}
+                buttonColor={Colors.primary}
+                textColor={Colors.primary}
+              >
+                Edit
+              </Button>
+            </View>
+          )}
+        </View>
+        
+        <Divider style={styles.divider} />
+        
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Email</Text>
+          <Text variant="bodyMedium" style={styles.settingValue}>
+            {user?.email || 'Not set'}
+          </Text>
+        </View>
+      </ModernCard>
 
       {/* Health Goals Section */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Health Goals
-          </Text>
-          <List.Item
-            title="Daily Water Goal"
-            description={`${preferences?.waterGoal || 64} oz`}
-            left={(props) => <List.Icon {...props} icon="water" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => showAlert('Coming Soon', 'Goal editing will be available in the next update.')}
-          />
-          <Divider />
-          <List.Item
-            title="Daily Step Goal"
-            description={`${(preferences?.stepGoal || 10000).toLocaleString()} steps`}
-            left={(props) => <List.Icon {...props} icon="walk" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => showAlert('Coming Soon', 'Goal editing will be available in the next update.')}
-          />
-        </Card.Content>
-      </Card>
+      <ModernCard 
+        title="Health Goals"
+        style={styles.card}
+      >
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Daily Water Goal</Text>
+          {editingWaterGoal ? (
+            <View style={styles.editRow}>
+              <TextInput
+                value={newWaterGoal}
+                onChangeText={setNewWaterGoal}
+                keyboardType="numeric"
+                style={styles.editInput}
+                mode="outlined"
+                right={<TextInput.Affix text="oz" />}
+                autoFocus
+              />
+              <Button
+                mode="contained"
+                onPress={handleUpdateWaterGoal}
+                style={styles.saveButton}
+                buttonColor={Colors.waterPrimary}
+              >
+                Save
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => {
+                  setEditingWaterGoal(false);
+                  setNewWaterGoal(preferences?.waterGoal?.toString() || '64');
+                }}
+                style={styles.cancelButton}
+              >
+                Cancel
+              </Button>
+            </View>
+          ) : (
+            <View style={styles.valueRow}>
+              <Text variant="bodyMedium" style={styles.settingValue}>
+                {preferences?.waterGoal || 64} oz
+              </Text>
+              <Button
+                mode="outlined"
+                onPress={() => setEditingWaterGoal(true)}
+                style={styles.editButton}
+                buttonColor={Colors.waterPrimary}
+                textColor={Colors.waterPrimary}
+              >
+                Edit
+              </Button>
+            </View>
+          )}
+        </View>
+        
+        <Divider style={styles.divider} />
+        
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Daily Step Goal</Text>
+          {editingStepGoal ? (
+            <View style={styles.editRow}>
+              <TextInput
+                value={newStepGoal}
+                onChangeText={setNewStepGoal}
+                keyboardType="numeric"
+                style={styles.editInput}
+                mode="outlined"
+                right={<TextInput.Affix text="steps" />}
+                autoFocus
+              />
+              <Button
+                mode="contained"
+                onPress={handleUpdateStepGoal}
+                style={styles.saveButton}
+                buttonColor={Colors.stepsPrimary}
+              >
+                Save
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={() => {
+                  setEditingStepGoal(false);
+                  setNewStepGoal(preferences?.stepGoal?.toString() || '10000');
+                }}
+                style={styles.cancelButton}
+              >
+                Cancel
+              </Button>
+            </View>
+          ) : (
+            <View style={styles.valueRow}>
+              <Text variant="bodyMedium" style={styles.settingValue}>
+                {preferences?.stepGoal || 10000} steps
+              </Text>
+              <Button
+                mode="outlined"
+                onPress={() => setEditingStepGoal(true)}
+                style={styles.editButton}
+                buttonColor={Colors.stepsPrimary}
+                textColor={Colors.stepsPrimary}
+              >
+                Edit
+              </Button>
+            </View>
+          )}
+        </View>
+      </ModernCard>
+
+      {/* Notifications Section */}
+      <ModernCard 
+        title="Notifications"
+        style={styles.card}
+      >
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Medication Reminders</Text>
+          <View style={styles.valueRow}>
+            <Text variant="bodyMedium" style={styles.settingValue}>
+              {preferences?.medicationReminders ? 'Enabled' : 'Disabled'}
+            </Text>
+            <Switch
+              value={preferences?.medicationReminders || false}
+              onValueChange={(value) => {
+                if (updatePreferences) {
+                  updatePreferences({ medicationReminders: value });
+                }
+              }}
+              color={Colors.primary}
+            />
+          </View>
+        </View>
+      </ModernCard>
 
       {/* Family & Sharing Section */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Family & Sharing
+      <ModernCard 
+        title="Family & Sharing"
+        style={styles.card}
+      >
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Share Wins</Text>
+          <View style={styles.valueRow}>
+            <Text variant="bodyMedium" style={styles.settingValue}>
+              {preferences?.shareWins ? 'Enabled' : 'Disabled'}
+            </Text>
+            <Switch
+              value={preferences?.shareWins || false}
+              onValueChange={() => showAlert('Coming Soon', 'Sharing settings will be available in the next update.')}
+              color={Colors.primary}
+            />
+          </View>
+        </View>
+        
+        <Divider style={styles.divider} />
+        
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Family Connection</Text>
+          <Text variant="bodyMedium" style={styles.settingValue}>
+            {preferences?.familyConnection ? 'Connected' : 'Not connected'}
           </Text>
-          <List.Item
-            title="Share Wins"
-            description={preferences?.shareWins ? 'Enabled' : 'Disabled'}
-            left={(props) => <List.Icon {...props} icon="share" />}
-            right={() => (
-              <Switch
-                value={preferences?.shareWins || false}
-                onValueChange={() => showAlert('Coming Soon', 'Sharing settings will be available in the next update.')}
-              />
-            )}
-          />
-          <Divider />
-          <List.Item
-            title="Family Connection"
-            description={preferences?.familyConnection ? 'Connected' : 'Not connected'}
-            left={(props) => <List.Icon {...props} icon="account-group" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => showAlert('Coming Soon', 'Family management will be available in the next update.')}
-          />
-          {preferences?.familyConnection && preferences?.familyEmail && (
-            <>
-              <Divider />
-              <List.Item
-                title="Weekly Report Email"
-                description={preferences.familyEmail}
-                left={(props) => <List.Icon {...props} icon="email" />}
-                right={(props) => <List.Icon {...props} icon="chevron-right" />}
-                onPress={() => showAlert('Family Email', `Weekly health reports are sent to: ${preferences.familyEmail}`)}
-              />
-            </>
-          )}
-          <Divider />
-          <List.Item
-            title="Show Medication Names"
-            description="Control what family members see"
-            left={(props) => <List.Icon {...props} icon="eye" />}
-            right={() => (
-              <Switch
-                value={showMedNames}
-                onValueChange={setShowMedNames}
-              />
-            )}
-          />
-        </Card.Content>
-      </Card>
+        </View>
+        
+        {preferences?.familyConnection && preferences?.familyEmail && (
+          <>
+            <Divider style={styles.divider} />
+            <View style={styles.settingItem}>
+              <Text variant="bodyLarge" style={styles.settingLabel}>Weekly Report Email</Text>
+              <Text variant="bodyMedium" style={styles.settingValue}>
+                {preferences.familyEmail}
+              </Text>
+            </View>
+          </>
+        )}
+        
+        <Divider style={styles.divider} />
+        
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Show Medication Names</Text>
+          <View style={styles.valueRow}>
+            <Text variant="bodyMedium" style={styles.settingValue}>
+              Control what family members see
+            </Text>
+            <Switch
+              value={showMedNames}
+              onValueChange={setShowMedNames}
+              color={Colors.primary}
+            />
+          </View>
+        </View>
+      </ModernCard>
 
       {/* Privacy Section */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Privacy & Data
+      <ModernCard 
+        title="Privacy & Data"
+        style={styles.card}
+      >
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Privacy Mode</Text>
+          <View style={styles.valueRow}>
+            <Text variant="bodyMedium" style={styles.settingValue}>
+              {preferences?.privacyMode ? 'Enabled' : 'Disabled'}
+            </Text>
+            <Switch
+              value={preferences?.privacyMode || false}
+              onValueChange={() => showAlert('Coming Soon', 'Privacy settings will be available in the next update.')}
+              color={Colors.primary}
+            />
+          </View>
+        </View>
+        
+        <Divider style={styles.divider} />
+        
+        <View style={styles.settingItem}>
+          <Text variant="bodyLarge" style={styles.settingLabel}>Sync Mode</Text>
+          <Text variant="bodyMedium" style={styles.settingValue}>
+            {preferences?.syncMode === 'automatic' ? 'Automatic' : 'Manual'}
           </Text>
-          <List.Item
-            title="Privacy Mode"
-            description={preferences?.privacyMode ? 'Enabled' : 'Disabled'}
-            left={(props) => <List.Icon {...props} icon="shield" />}
-            right={() => (
-              <Switch
-                value={preferences?.privacyMode || false}
-                onValueChange={() => showAlert('Coming Soon', 'Privacy settings will be available in the next update.')}
-              />
-            )}
-          />
-          <Divider />
-          <List.Item
-            title="Sync Mode"
-            description={preferences?.syncMode === 'automatic' ? 'Automatic' : 'Manual'}
-            left={(props) => <List.Icon {...props} icon="sync" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => showAlert('Coming Soon', 'Sync settings will be available in the next update.')}
-          />
-        </Card.Content>
-      </Card>
+        </View>
+      </ModernCard>
 
       {/* Actions Section */}
       <View style={styles.actions}>
@@ -251,16 +422,14 @@ const SettingsScreen: React.FC = () => {
       </View>
 
       {/* App Info */}
-      <Card style={styles.infoCard}>
-        <Card.Content>
-          <Text variant="bodySmall" style={styles.infoText}>
-            AtheraCare v1.0.0
-          </Text>
-          <Text variant="bodySmall" style={styles.infoText}>
-            Built with ❤️ for better health and family connection
-          </Text>
-        </Card.Content>
-      </Card>
+      <ModernCard style={styles.infoCard}>
+        <Text variant="bodySmall" style={styles.infoText}>
+          AtheraCare v1.0.0
+        </Text>
+        <Text variant="bodySmall" style={styles.infoText}>
+          Built with ❤️ for better health and family connection
+        </Text>
+      </ModernCard>
       
       {/* Custom Alert */}
       <CustomAlert
@@ -285,49 +454,91 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
+  },
+  header: {
+    marginBottom: Spacing.lg,
   },
   title: {
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
+    color: Colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
   },
   subtitle: {
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#666',
+    color: Colors.textSecondary,
   },
   card: {
-    marginBottom: 20,
-    elevation: 2,
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
   },
-  sectionTitle: {
-    marginBottom: 15,
-    color: '#333',
-    fontWeight: '500',
+  settingsIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  settingItem: {
+    marginBottom: Spacing.md,
+  },
+  settingLabel: {
+    color: Colors.textPrimary,
+    fontWeight: '600',
+    marginBottom: Spacing.sm,
+  },
+  settingValue: {
+    color: Colors.textSecondary,
+  },
+  valueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  editRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    alignItems: 'center',
+  },
+  editInput: {
+    flex: 1,
+  },
+  editButton: {
+    borderRadius: BorderRadius.md,
+  },
+  saveButton: {
+    borderRadius: BorderRadius.md,
+  },
+  cancelButton: {
+    borderRadius: BorderRadius.md,
+  },
+  divider: {
+    marginVertical: Spacing.sm,
   },
   actions: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 20,
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
   actionButton: {
     flex: 1,
+    borderRadius: BorderRadius.md,
   },
   signOutButton: {
-    backgroundColor: '#FF3B30',
+    backgroundColor: Colors.error,
   },
   infoCard: {
-    marginBottom: 20,
-    elevation: 1,
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
   },
   infoText: {
     textAlign: 'center',
-    color: '#666',
+    color: Colors.textSecondary,
     marginBottom: 5,
   },
 });

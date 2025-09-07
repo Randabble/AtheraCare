@@ -22,25 +22,33 @@ export interface Medication {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   active: boolean;
+  dosage?: string;
+  frequency?: string;
+  instructions?: string;
+  imageUri?: string;
 }
 
 // Add a new medication
-export const addMedication = async (userId: string, name: string, days: string[]): Promise<string> => {
+export const addMedication = async (userId: string, medicationData: any): Promise<string> => {
   try {
-    console.log('Adding medication to Firestore:', { userId, name, days });
+    console.log('Adding medication to Firestore:', { userId, medicationData });
     
-    const medicationData: Omit<Medication, 'id'> = {
-      name: name.trim(),
+    const data: Omit<Medication, 'id'> = {
+      name: medicationData.name.trim(),
       userId,
-      days: days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+      days: medicationData.days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
       takenToday: false,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
-      active: true
+      active: true,
+      dosage: medicationData.dosage || '',
+      frequency: medicationData.frequency || '',
+      instructions: medicationData.instructions || '',
+      imageUri: medicationData.imageUri || ''
     };
 
-    console.log('Medication data:', medicationData);
-    const docRef = await addDoc(collection(db, 'medications'), medicationData);
+    console.log('Medication data:', data);
+    const docRef = await addDoc(collection(db, 'medications'), data);
     console.log('Medication added successfully with ID:', docRef.id);
     return docRef.id;
   } catch (error) {

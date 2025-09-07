@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, Button, ProgressBar, TextInput, useTheme } from 'react-native-paper';
+import { Text, Button, ProgressBar, TextInput, useTheme } from 'react-native-paper';
+import ModernCard from '../../components/ModernCard';
+import ProgressRing from '../../components/ProgressRing';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { getTodayHydration, addWater, resetTodayWater, updateWaterGoal } from '../../utils/hydration';
 import { updateWaterTracking } from '../../utils/activityTracker';
 import CustomAlert from '../../components/CustomAlert';
+import { Colors, Spacing, BorderRadius } from '../../theme/colors';
+import { WaterIcon, PlusIcon } from '../../components/icons/ModernIcons';
 
 const WaterScreen: React.FC = () => {
   const { user } = useAuth();
@@ -149,19 +153,22 @@ const WaterScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text variant="headlineMedium" style={styles.title}>
-        💧 Water Tracker
-      </Text>
-      
-      <Text variant="bodyLarge" style={styles.subtitle}>
-        Stay hydrated throughout the day
-      </Text>
+      <View style={styles.header}>
+        <Text variant="headlineLarge" style={styles.title}>
+          Water Tracker
+        </Text>
+        <Text variant="bodyLarge" style={styles.subtitle}>
+          Stay hydrated throughout the day
+        </Text>
+      </View>
 
       {/* Water Progress Card */}
-      <Card style={styles.progressCard}>
-        <Card.Content>
-          <View style={styles.progressHeader}>
-            <Text variant="titleLarge">Today's Progress</Text>
+      <ModernCard style={styles.progressCard}>
+        <View style={styles.progressHeader}>
+          <View style={styles.waterIconContainer}>
+            <WaterIcon size={48} color={Colors.waterPrimary} />
+          </View>
+          <View style={styles.progressInfo}>
             <Text variant="headlineLarge" style={styles.waterAmount}>
               {waterIntake} oz
             </Text>
@@ -169,73 +176,73 @@ const WaterScreen: React.FC = () => {
               Goal: {waterGoal} oz
             </Text>
           </View>
-          
-          <ProgressBar 
-            progress={progress} 
-            color={theme.colors.primary}
-            style={styles.progressBar}
-          />
-          
-          <Text variant="bodyMedium" style={styles.percentageText}>
-            {percentage}% of daily goal
-          </Text>
-        </Card.Content>
-      </Card>
+        </View>
+        
+        <ProgressRing
+          progress={progress}
+          size={120}
+          strokeWidth={8}
+          color={Colors.waterPrimary}
+          centerText={`${percentage}%`}
+          centerSubtext="Complete"
+        />
+        
+        <Text variant="bodyMedium" style={styles.percentageText}>
+          {percentage}% of daily goal
+        </Text>
+      </ModernCard>
 
       {/* Quick Add Buttons */}
-      <Card style={styles.quickAddCard}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Quick Add
-          </Text>
-          <Text variant="bodyMedium" style={styles.sectionSubtitle}>
-            Tap to add water quickly
-          </Text>
-          
-          <View style={styles.quickAddButtons}>
-            {quickAmounts.map((amount) => (
-              <Button
-                key={amount}
-                mode="outlined"
-                onPress={() => handleAddWater(amount)}
-                disabled={loading}
-                style={styles.quickAddButton}
-                contentStyle={styles.quickAddButtonContent}
-              >
-                {amount} oz
-              </Button>
-            ))}
-          </View>
-        </Card.Content>
-      </Card>
+      <ModernCard 
+        title="Quick Add"
+        subtitle="Tap to add water quickly"
+        style={styles.quickAddCard}
+      >
+        <View style={styles.quickAddButtons}>
+          {quickAmounts.map((amount) => (
+            <Button
+              key={amount}
+              mode="outlined"
+              onPress={() => handleAddWater(amount)}
+              disabled={loading}
+              style={styles.quickAddButton}
+              contentStyle={styles.quickAddButtonContent}
+              buttonColor={Colors.waterPrimary}
+              textColor={Colors.waterPrimary}
+            >
+              {amount} oz
+            </Button>
+          ))}
+        </View>
+      </ModernCard>
 
       {/* Custom Amount */}
-      <Card style={styles.customAmountCard}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Custom Amount
-          </Text>
-          <View style={styles.customAmountRow}>
-            <TextInput
-              label="Ounces"
-              value={newGoal}
-              onChangeText={setNewGoal}
-              keyboardType="numeric"
-              style={styles.customAmountInput}
-              mode="outlined"
-              right={<TextInput.Affix text="oz" />}
-            />
-            <Button
-              mode="contained"
-              onPress={() => handleAddWater(parseInt(newGoal) || 0)}
-              disabled={loading || !newGoal.trim() || parseInt(newGoal) <= 0}
-              style={styles.customAddButton}
-            >
-              Add
-            </Button>
-          </View>
-        </Card.Content>
-      </Card>
+      <ModernCard 
+        title="Custom Amount"
+        style={styles.customAmountCard}
+      >
+        <View style={styles.customAmountRow}>
+          <TextInput
+            label="Ounces"
+            value={newGoal}
+            onChangeText={setNewGoal}
+            keyboardType="numeric"
+            style={styles.customAmountInput}
+            mode="outlined"
+            right={<TextInput.Affix text="oz" />}
+          />
+          <Button
+            mode="contained"
+            onPress={() => handleAddWater(parseInt(newGoal) || 0)}
+            disabled={loading || !newGoal.trim() || parseInt(newGoal) <= 0}
+            style={styles.customAddButton}
+            buttonColor={Colors.waterPrimary}
+            icon={() => <PlusIcon size={16} color="white" />}
+          >
+            Add
+          </Button>
+        </View>
+      </ModernCard>
 
       {/* Actions */}
       <View style={styles.actions}>
@@ -243,7 +250,8 @@ const WaterScreen: React.FC = () => {
           mode="outlined"
           onPress={() => setShowGoalInput(!showGoalInput)}
           style={styles.actionButton}
-          icon="target"
+          buttonColor={Colors.waterPrimary}
+          textColor={Colors.waterPrimary}
         >
           Change Goal
         </Button>
@@ -253,7 +261,7 @@ const WaterScreen: React.FC = () => {
           onPress={handleResetWater}
           disabled={loading}
           style={styles.actionButton}
-          icon="refresh"
+          textColor={Colors.error}
         >
           Reset Today
         </Button>
@@ -261,39 +269,38 @@ const WaterScreen: React.FC = () => {
 
       {/* Goal Input Modal */}
       {showGoalInput && (
-        <Card style={styles.goalInputCard}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              Set New Water Goal
-            </Text>
-            <TextInput
-              label="Daily Goal (oz)"
-              value={newGoal}
-              onChangeText={setNewGoal}
-              keyboardType="numeric"
-              style={styles.goalInput}
+        <ModernCard style={styles.goalInputCard}>
+          <Text variant="titleMedium" style={styles.sectionTitle}>
+            Set New Water Goal
+          </Text>
+          <TextInput
+            label="Daily Goal (oz)"
+            value={newGoal}
+            onChangeText={setNewGoal}
+            keyboardType="numeric"
+            style={styles.goalInput}
+            mode="outlined"
+            right={<TextInput.Affix text="oz" />}
+          />
+          <View style={styles.goalInputButtons}>
+            <Button
               mode="outlined"
-              right={<TextInput.Affix text="oz" />}
-            />
-            <View style={styles.goalInputButtons}>
-              <Button
-                mode="outlined"
-                onPress={() => setShowGoalInput(false)}
-                style={styles.cancelButton}
-              >
-                Cancel
-              </Button>
-              <Button
-                mode="contained"
-                onPress={handleUpdateGoal}
-                disabled={loading || !newGoal.trim() || parseInt(newGoal) <= 0}
-                style={styles.updateButton}
-              >
-                Update Goal
-              </Button>
-            </View>
-          </Card.Content>
-        </Card>
+              onPress={() => setShowGoalInput(false)}
+              style={styles.cancelButton}
+            >
+              Cancel
+            </Button>
+            <Button
+              mode="contained"
+              onPress={handleUpdateGoal}
+              disabled={loading || !newGoal.trim() || parseInt(newGoal) <= 0}
+              style={styles.updateButton}
+              buttonColor={Colors.waterPrimary}
+            >
+              Update Goal
+            </Button>
+          </View>
+        </ModernCard>
       )}
       
       <CustomAlert
@@ -313,84 +320,92 @@ const WaterScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  header: {
+    marginBottom: Spacing.lg,
+  },
   title: {
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
+    color: Colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
   },
   subtitle: {
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#666',
+    color: Colors.textSecondary,
   },
   progressCard: {
-    marginBottom: 20,
-    elevation: 2,
+    backgroundColor: Colors.waterBackground,
+    marginBottom: Spacing.lg,
   },
   progressHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  waterIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.waterPrimary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressInfo: {
+    flex: 1,
   },
   waterAmount: {
-    color: '#007AFF',
-    marginVertical: 10,
+    color: Colors.waterPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
   },
   goalText: {
-    color: '#666',
-    marginBottom: 15,
-  },
-  progressBar: {
-    height: 12,
-    borderRadius: 6,
-    marginBottom: 10,
+    color: Colors.textSecondary,
   },
   percentageText: {
     textAlign: 'center',
-    color: '#666',
+    color: Colors.textSecondary,
     fontWeight: '500',
+    marginTop: Spacing.md,
   },
   quickAddCard: {
-    marginBottom: 20,
-    elevation: 2,
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
   },
   sectionTitle: {
-    marginBottom: 8,
-    color: '#333',
-  },
-  sectionSubtitle: {
-    color: '#666',
-    marginBottom: 15,
+    color: Colors.textPrimary,
+    fontWeight: '600',
+    marginBottom: Spacing.sm,
   },
   quickAddButtons: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: Spacing.sm,
   },
   quickAddButton: {
     flex: 1,
     minWidth: '45%',
+    borderRadius: BorderRadius.md,
   },
   quickAddButtonContent: {
-    paddingVertical: 8,
+    paddingVertical: Spacing.sm,
   },
   customAmountCard: {
-    marginBottom: 20,
-    elevation: 2,
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
   },
   customAmountRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: Spacing.sm,
     alignItems: 'center',
   },
   customAmountInput: {
@@ -398,30 +413,34 @@ const styles = StyleSheet.create({
   },
   customAddButton: {
     flex: 1,
+    borderRadius: BorderRadius.md,
   },
   actions: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 20,
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
   actionButton: {
     flex: 1,
+    borderRadius: BorderRadius.md,
   },
   goalInputCard: {
-    elevation: 2,
+    backgroundColor: Colors.surface,
   },
   goalInput: {
-    marginBottom: 15,
+    marginBottom: Spacing.md,
   },
   goalInputButtons: {
     flexDirection: 'row',
-    gap: 10,
+    gap: Spacing.sm,
   },
   cancelButton: {
     flex: 1,
+    borderRadius: BorderRadius.md,
   },
   updateButton: {
     flex: 1,
+    borderRadius: BorderRadius.md,
   },
 });
 

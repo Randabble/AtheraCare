@@ -7,7 +7,10 @@ import HomeScreen from '../screens/senior/HomeScreen';
 import MedsScreen from '../screens/senior/MedsScreen';
 import WaterScreen from '../screens/senior/WaterScreen';
 import ActivityTrackerScreen from '../screens/senior/ActivityTrackerScreen';
+import ProfileScreen from '../screens/senior/ProfileScreen';
 import SettingsScreen from '../screens/senior/SettingsScreen';
+import { HomeIcon, MedicationIcon, WaterIcon, ActivityIcon, ProfileIcon, SettingsIcon } from '../components/icons/ModernIcons';
+import { Colors } from '../theme/colors';
 
 const Tab = createBottomTabNavigator();
 
@@ -15,22 +18,22 @@ const SeniorTabs: React.FC = () => {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#8E8E93',
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: 'white',
+          backgroundColor: Colors.surface,
           borderTopWidth: 1,
-          borderTopColor: '#E5E5EA',
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
+          borderTopColor: Colors.cardBorder,
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 70,
         },
         headerStyle: {
-          backgroundColor: '#007AFF',
+          backgroundColor: Colors.primary,
         },
         headerTintColor: 'white',
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: '600',
         },
       }}
     >
@@ -39,7 +42,7 @@ const SeniorTabs: React.FC = () => {
         component={HomeScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>🏠</Text>
+            <HomeIcon size={size} color={color} />
           ),
           title: 'Home',
         }}
@@ -49,7 +52,7 @@ const SeniorTabs: React.FC = () => {
         component={MedsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>💊</Text>
+            <MedicationIcon size={size} color={color} />
           ),
           title: 'Medications',
         }}
@@ -59,7 +62,7 @@ const SeniorTabs: React.FC = () => {
         component={WaterScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>💧</Text>
+            <WaterIcon size={size} color={color} />
           ),
           title: 'Hydration',
         }}
@@ -69,9 +72,19 @@ const SeniorTabs: React.FC = () => {
         component={ActivityTrackerScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ color, fontSize: size }}>📊</Text>
+            <ActivityIcon size={size} color={color} />
           ),
           title: 'Activity',
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <ProfileIcon size={size} color={color} />
+          ),
+          title: 'Profile',
         }}
       />
       <Tab.Screen
@@ -79,7 +92,7 @@ const SeniorTabs: React.FC = () => {
         component={SettingsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Text style={{ color }}>⚙️</Text>
+            <SettingsIcon size={size} color={color} />
           ),
           title: 'Settings',
         }}

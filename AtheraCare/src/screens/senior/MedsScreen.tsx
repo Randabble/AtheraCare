@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Card, Button, TextInput, Chip, FAB, List, IconButton, Badge, useTheme } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Text, Button, Chip, FAB, IconButton, Badge, useTheme } from 'react-native-paper';
+import ModernCard from '../../components/ModernCard';
+import MedicationModal from '../../components/MedicationModal';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMedications, addMedication, deleteMedication, markMedicationTaken, Medication } from '../../utils/medications';
 import { updateMedicationTracking } from '../../utils/activityTracker';
 import CustomAlert from '../../components/CustomAlert';
+import { Colors, Spacing, BorderRadius } from '../../theme/colors';
+import { MedicationIcon, PlusIcon } from '../../components/icons/ModernIcons';
 
 const MedsScreen: React.FC = () => {
   const { user } = useAuth();
   const theme = useTheme();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newMedName, setNewMedName] = useState('');
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [showMedicationModal, setShowMedicationModal] = useState(false);
+  const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
@@ -28,6 +31,39 @@ const MedsScreen: React.FC = () => {
   const hideAlert = () => {
     setAlertVisible(false);
     setPendingDeleteId(null);
+  };
+
+  const handleAddMedication = () => {
+    setEditingMedication(null);
+    setShowMedicationModal(true);
+  };
+
+  const handleEditMedication = (medication: Medication) => {
+    setEditingMedication(medication);
+    setShowMedicationModal(true);
+  };
+
+  const handleSaveMedication = async (medicationData: any) => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      if (editingMedication) {
+        // Update existing medication
+        await addMedication(user.uid, medicationData);
+        showAlert('Success', 'Medication updated successfully!');
+      } else {
+        // Add new medication
+        await addMedication(user.uid, medicationData);
+        showAlert('Success', 'Medication added successfully!');
+      }
+      await loadMedications();
+    } catch (error) {
+      console.error('Error saving medication:', error);
+      showAlert('Error', 'Failed to save medication');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -53,27 +89,6 @@ const MedsScreen: React.FC = () => {
     }
   };
 
-  const handleAddMedication = async () => {
-    if (!user || !newMedName.trim() || selectedDays.length === 0) {
-      showAlert('Error', 'Please enter a medication name and select days');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await addMedication(user.uid, newMedName.trim(), selectedDays);
-      setNewMedName('');
-      setSelectedDays([]);
-      setShowAddForm(false);
-      await loadMedications();
-      showAlert('Success', 'Medication added successfully! 💊');
-    } catch (error) {
-      console.error('Error adding medication:', error);
-      showAlert('Error', 'Failed to add medication');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteMedication = async (medicationId: string) => {
     setPendingDeleteId(medicationId);
@@ -122,13 +137,6 @@ const MedsScreen: React.FC = () => {
     }
   };
 
-  const toggleDay = (day: string) => {
-    if (selectedDays.includes(day)) {
-      setSelectedDays(selectedDays.filter(d => d !== day));
-    } else {
-      setSelectedDays([...selectedDays, day]);
-    }
-  };
 
   const getTodaysMeds = () => {
     if (!medications.length) return [];
@@ -152,155 +160,125 @@ const MedsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text variant="headlineMedium" style={styles.title}>
-          💊 Medications
-        </Text>
-        
-        <Text variant="bodyLarge" style={styles.subtitle}>
-          Track your daily medications
-        </Text>
+        <View style={styles.header}>
+          <Text variant="headlineLarge" style={styles.title}>
+            Medications
+          </Text>
+          <Text variant="bodyLarge" style={styles.subtitle}>
+            Track your daily medications
+          </Text>
+        </View>
 
         {/* Today's Medications Summary */}
         {todaysMeds.length > 0 && (
-          <Card style={styles.summaryCard}>
-            <Card.Content>
-              <Text variant="titleMedium" style={styles.summaryTitle}>
-                Today's Medications ({todaysMeds.length})
-              </Text>
-              {todaysMeds.map((med, index) => (
-                <View key={index} style={styles.todayMedItem}>
-                  <View style={styles.medInfo}>
-                    <Text variant="bodyLarge" style={styles.medName}>
-                      {med.name}
-                    </Text>
-                    {med.takenToday && (
-                      <Badge style={styles.takenBadge}>Taken ✓</Badge>
-                    )}
-                  </View>
-                  {!med.takenToday && (
-                    <Button
-                      mode="contained"
-                                              onPress={() => med.id && handleMarkTaken(med.id)}
-                      disabled={loading}
-                      style={styles.takeButton}
-                      icon="check"
-                    >
-                      I Took It
-                    </Button>
+          <ModernCard 
+            title={`Today's Medications (${todaysMeds.length})`}
+            style={styles.summaryCard}
+          >
+            <View style={styles.summaryIcon}>
+              <MedicationIcon size={32} color={Colors.medsPrimary} />
+            </View>
+            
+            {todaysMeds.map((med, index) => (
+              <View key={index} style={styles.todayMedItem}>
+                <View style={styles.medInfo}>
+                  <Text variant="bodyLarge" style={styles.medName}>
+                    {med.name}
+                  </Text>
+                  {med.takenToday && (
+                    <Badge style={styles.takenBadge}>Taken ✓</Badge>
                   )}
                 </View>
-              ))}
-            </Card.Content>
-          </Card>
+                {!med.takenToday && (
+                  <Button
+                    mode="contained"
+                    onPress={() => med.id && handleMarkTaken(med.id)}
+                    disabled={loading}
+                    style={styles.takeButton}
+                    buttonColor={Colors.medsPrimary}
+                    icon="check"
+                  >
+                    I Took It
+                  </Button>
+                )}
+              </View>
+            ))}
+          </ModernCard>
         )}
 
         {/* All Medications List */}
-        <Card style={styles.medsCard}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              All Medications ({medications.length})
-            </Text>
-            
-            {medications.length === 0 ? (
-              <Text variant="bodyMedium" style={styles.noMeds}>
-                No medications added yet. Tap the + button to add your first medication.
+        <ModernCard 
+          title={`All Medications (${medications.length})`}
+          style={styles.medsCard}
+        >
+          {medications.length === 0 ? (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcon}>
+                <MedicationIcon size={48} color={Colors.textSecondary} />
+              </View>
+              <Text variant="bodyLarge" style={styles.emptyText}>
+                No medications added yet
               </Text>
-            ) : (
-              medications.map((med) => (
-                <List.Item
-                  key={med.id}
-                  title={med.name}
-                  description={`Days: ${med.days ? med.days.join(', ') : 'Not set'}`}
-                  left={(props) => (
-                    <List.Icon {...props} icon="pill" color={theme.colors.primary} />
-                  )}
-                  right={(props) => (
-                    <View style={styles.medActions}>
-                      {med.takenToday && (
-                        <Badge style={styles.takenBadge}>Taken ✓</Badge>
-                      )}
-                      <IconButton
-                        {...props}
-                        icon="delete"
-                        size={20}
-                        onPress={() => med.id && handleDeleteMedication(med.id)}
-                        disabled={loading}
-                      />
+              <Text variant="bodyMedium" style={styles.emptySubtext}>
+                Tap the + button to add your first medication
+              </Text>
+            </View>
+          ) : (
+            medications.map((med) => (
+              <View key={med.id} style={styles.medItem}>
+                <View style={styles.medContent}>
+                  <View style={styles.medIcon}>
+                    <MedicationIcon size={24} color={Colors.medsPrimary} />
+                  </View>
+                  <View style={styles.medDetails}>
+                    <Text variant="bodyLarge" style={styles.medName}>
+                      {med.name}
+                    </Text>
+                    <Text variant="bodyMedium" style={styles.medDosage}>
+                      {med.dosage || 'No dosage specified'}
+                    </Text>
+                    <View style={styles.medDays}>
+                      {med.days?.map((day, index) => (
+                        <Chip key={index} style={styles.dayChip} textStyle={styles.dayChipText}>
+                          {day.slice(0, 3)}
+                        </Chip>
+                      ))}
                     </View>
-                  )}
-                  style={styles.medItem}
-                />
-              ))
-            )}
-          </Card.Content>
-        </Card>
+                  </View>
+                </View>
+                <View style={styles.medActions}>
+                  <IconButton
+                    icon="pencil"
+                    size={20}
+                    onPress={() => handleEditMedication(med)}
+                    iconColor={Colors.primary}
+                  />
+                  <IconButton
+                    icon="delete"
+                    size={20}
+                    onPress={() => med.id && handleDeleteMedication(med.id)}
+                    iconColor={Colors.error}
+                  />
+                </View>
+              </View>
+            ))
+          )}
+        </ModernCard>
 
-        {/* Add Medication Form */}
-        {showAddForm && (
-          <Card style={styles.addFormCard}>
-            <Card.Content>
-              <Text variant="titleMedium" style={styles.sectionTitle}>
-                Add New Medication
-              </Text>
-              
-              <TextInput
-                label="Medication Name"
-                value={newMedName}
-                onChangeText={setNewMedName}
-                style={styles.input}
-                mode="outlined"
-                placeholder="e.g., Aspirin, Vitamin D"
-              />
-              
-              <Text variant="bodyMedium" style={styles.daysLabel}>
-                Take on these days:
-              </Text>
-              
-              <View style={styles.daysContainer}>
-                {daysOfWeek.map((day) => (
-                  <Chip
-                    key={day}
-                    selected={selectedDays.includes(day)}
-                    onPress={() => toggleDay(day)}
-                    style={styles.dayChip}
-                    mode="outlined"
-                  >
-                    {day.slice(0, 3)}
-                  </Chip>
-                ))}
-              </View>
-              
-              <View style={styles.formButtons}>
-                <Button
-                  mode="outlined"
-                  onPress={() => {
-                    setShowAddForm(false);
-                    setNewMedName('');
-                    setSelectedDays([]);
-                  }}
-                  style={styles.cancelButton}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  mode="contained"
-                  onPress={handleAddMedication}
-                  disabled={loading || !newMedName.trim() || selectedDays.length === 0}
-                  style={styles.addButton}
-                >
-                  Add Medication
-                </Button>
-              </View>
-            </Card.Content>
-          </Card>
-        )}
+        {/* Medication Modal */}
+        <MedicationModal
+          visible={showMedicationModal}
+          onClose={() => setShowMedicationModal(false)}
+          onSave={handleSaveMedication}
+          medication={editingMedication}
+        />
       </ScrollView>
 
       <FAB
         icon="plus"
-        style={styles.fab}
-        onPress={() => setShowAddForm(!showAddForm)}
-        label={showAddForm ? 'Close' : 'Add Med'}
+        style={[styles.fab, { backgroundColor: Colors.medsPrimary }]}
+        onPress={handleAddMedication}
+        label="Add Med"
       />
       
       <CustomAlert
@@ -320,13 +298,13 @@ const MedsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: 20,
+    padding: Spacing.md,
     paddingBottom: 100,
   },
   loadingContainer: {
@@ -334,15 +312,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  header: {
+    marginBottom: Spacing.lg,
+  },
   title: {
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
+    color: Colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
   },
   subtitle: {
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#666',
+    color: Colors.textSecondary,
   },
   summaryCard: {
     marginBottom: 20,
@@ -392,15 +371,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     paddingVertical: 20,
   },
-  medItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-  },
-  medActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
   addFormCard: {
     marginBottom: 20,
     elevation: 2,
@@ -419,9 +389,6 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 20,
   },
-  dayChip: {
-    marginBottom: 5,
-  },
   formButtons: {
     flexDirection: 'row',
     gap: 10,
@@ -437,6 +404,82 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
+  },
+  medItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.cardBorder,
+  },
+  medContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  medIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.medsPrimary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  medDetails: {
+    flex: 1,
+  },
+  medDosage: {
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  medDays: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  dayChip: {
+    backgroundColor: Colors.primary + '20',
+  },
+  dayChipText: {
+    color: Colors.primary,
+    fontSize: 12,
+  },
+  medActions: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+  },
+  summaryIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.medsPrimary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.textSecondary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  emptyText: {
+    color: Colors.textPrimary,
+    fontWeight: '600',
+    marginBottom: Spacing.sm,
+  },
+  emptySubtext: {
+    color: Colors.textSecondary,
+    textAlign: 'center',
   },
 });
 

@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import CustomAlert from '../../components/CustomAlert';
-import { Text, Card, Button, ProgressBar, useTheme, Badge } from 'react-native-paper';
+import ModernCard from '../../components/ModernCard';
+import ProgressRing from '../../components/ProgressRing';
+import { Text, Button, ProgressBar, useTheme, Badge } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { getMedications, Medication } from '../../utils/medications';
 import { getTodayHydration, HydrationLog } from '../../utils/hydration';
 import { Pedometer } from 'expo-sensors';
+import { Colors, Spacing, BorderRadius } from '../../theme/colors';
+import { MedicationIcon, WaterIcon, StepsIcon, ShareIcon } from '../../components/icons/ModernIcons';
 
 const HomeScreen: React.FC = () => {
   const { user } = useAuth();
@@ -104,20 +108,78 @@ const HomeScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text variant="headlineMedium" style={styles.title}>
-        Welcome back! 👋
-      </Text>
-      
-      <Text variant="bodyLarge" style={styles.subtitle}>
-        Here's how you're doing today
-      </Text>
+      <View style={styles.header}>
+        <Text variant="headlineLarge" style={styles.title}>
+          Today
+        </Text>
+        <Text variant="bodyLarge" style={styles.subtitle}>
+          Here's how you're doing
+        </Text>
+      </View>
+
+      {/* Summary Card with Progress Rings */}
+      <ModernCard style={styles.summaryCard}>
+        <View style={styles.summaryHeader}>
+          <Text variant="titleLarge" style={styles.summaryTitle}>Summary</Text>
+          <Text variant="bodyMedium" style={styles.detailsLink}>Details</Text>
+        </View>
+        
+        <View style={styles.progressContainer}>
+          <View style={styles.progressItem}>
+            <Text variant="bodyMedium" style={styles.progressLabel}>0 Eaten</Text>
+          </View>
+          
+          <ProgressRing
+            progress={waterProgress}
+            size={140}
+            strokeWidth={6}
+            color={Colors.waterPrimary}
+            centerText="2,561"
+            centerSubtext="Remaining"
+          />
+          
+          <View style={styles.progressItem}>
+            <Text variant="bodyMedium" style={styles.progressLabel}>72 Burned</Text>
+          </View>
+        </View>
+
+        {/* Macronutrient breakdown */}
+        <View style={styles.macroContainer}>
+          <View style={styles.macroItem}>
+            <Text variant="bodySmall" style={styles.macroLabel}>Carbs</Text>
+            <Text variant="bodySmall" style={styles.macroValue}>0 / 312 g</Text>
+            <View style={styles.macroBar}>
+              <View style={[styles.macroProgress, { width: '0%', backgroundColor: Colors.primary }]} />
+            </View>
+          </View>
+          
+          <View style={styles.macroItem}>
+            <Text variant="bodySmall" style={styles.macroLabel}>Protein</Text>
+            <Text variant="bodySmall" style={styles.macroValue}>0 / 125 g</Text>
+            <View style={styles.macroBar}>
+              <View style={[styles.macroProgress, { width: '0%', backgroundColor: Colors.primary }]} />
+            </View>
+          </View>
+          
+          <View style={styles.macroItem}>
+            <Text variant="bodySmall" style={styles.macroLabel}>Fat</Text>
+            <Text variant="bodySmall" style={styles.macroValue}>0 / 83 g</Text>
+            <View style={styles.macroBar}>
+              <View style={[styles.macroProgress, { width: '0%', backgroundColor: Colors.primary }]} />
+            </View>
+          </View>
+        </View>
+      </ModernCard>
 
       {/* Medications Card */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.cardHeader}>
-            <Text variant="titleLarge">💊 Today's Medications</Text>
-            <Badge>{`${medsTaken}/${totalMeds}`}</Badge>
+      <ModernCard 
+        title="Medications"
+        subtitle={`${medsTaken}/${totalMeds} taken today`}
+        style={styles.medsCard}
+      >
+        <View style={styles.medsContent}>
+          <View style={styles.medsIcon}>
+            <MedicationIcon size={32} color={Colors.medsPrimary} />
           </View>
           
           {todaysMeds.length > 0 ? (
@@ -143,107 +205,85 @@ const HomeScreen: React.FC = () => {
             mode="contained"
             onPress={() => handleShareWin('medication streak')}
             style={styles.actionButton}
-            icon="share"
+            buttonColor={Colors.medsPrimary}
+            icon={() => <ShareIcon size={16} color="white" />}
           >
             Share This Win
           </Button>
-        </Card.Content>
-      </Card>
+        </View>
+      </ModernCard>
 
       {/* Water Card */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.cardHeader}>
-            <Text variant="titleLarge">💧 Water Progress</Text>
-            <Text variant="titleMedium" style={styles.waterAmount}>
-              {hydration?.totalOz || 0} oz
-            </Text>
+      <ModernCard 
+        title="Water Tracker"
+        subtitle={`${hydration?.totalOz || 0} / ${preferences.waterGoal} oz`}
+        style={styles.waterCard}
+      >
+        <View style={styles.waterContent}>
+          <View style={styles.waterIcon}>
+            <WaterIcon size={32} color={Colors.waterPrimary} />
           </View>
           
-          <ProgressBar 
-            progress={waterProgress} 
-            color={theme.colors.primary}
-            style={styles.progressBar}
-          />
-          
-          <Text variant="bodyMedium" style={styles.progressText}>
-            {Math.round(waterProgress * 100)}% of {preferences.waterGoal} oz goal
-          </Text>
+          <View style={styles.waterProgress}>
+            <ProgressBar 
+              progress={waterProgress} 
+              color={Colors.waterPrimary}
+              style={styles.progressBar}
+            />
+            <Text variant="bodyMedium" style={styles.progressText}>
+              {Math.round(waterProgress * 100)}% of daily goal
+            </Text>
+          </View>
           
           {waterProgress >= 1 && (
             <Button
               mode="contained"
               onPress={() => handleShareWin('water goal')}
               style={styles.actionButton}
-              icon="share"
+              buttonColor={Colors.waterPrimary}
+              icon={() => <ShareIcon size={16} color="white" />}
             >
               Share This Win
             </Button>
           )}
-        </Card.Content>
-      </Card>
+        </View>
+      </ModernCard>
 
       {/* Steps Card */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.cardHeader}>
-            <Text variant="titleLarge">👟 Today's Steps</Text>
-            <Text variant="titleMedium" style={styles.stepsAmount}>
-              {steps.toLocaleString()}
-            </Text>
+      <ModernCard 
+        title="Steps"
+        subtitle={`${steps.toLocaleString()} / ${preferences.stepGoal.toLocaleString()} steps`}
+        style={styles.stepsCard}
+      >
+        <View style={styles.stepsContent}>
+          <View style={styles.stepsIcon}>
+            <StepsIcon size={32} color={Colors.stepsPrimary} />
           </View>
           
-          <ProgressBar 
-            progress={stepsProgress} 
-            color={theme.colors.primary}
-            style={styles.progressBar}
-          />
-          
-          <Text variant="bodyMedium" style={styles.progressText}>
-            {Math.round(stepsProgress * 100)}% of {preferences.stepGoal.toLocaleString()} step goal
-          </Text>
+          <View style={styles.stepsProgress}>
+            <ProgressBar 
+              progress={stepsProgress} 
+              color={Colors.stepsPrimary}
+              style={styles.progressBar}
+            />
+            <Text variant="bodyMedium" style={styles.progressText}>
+              {Math.round(stepsProgress * 100)}% of daily goal
+            </Text>
+          </View>
           
           {stepsProgress >= 1 && (
             <Button
               mode="contained"
               onPress={() => handleShareWin('step goal')}
               style={styles.actionButton}
-              icon="share"
+              buttonColor={Colors.stepsPrimary}
+              icon={() => <ShareIcon size={16} color="white" />}
             >
               Share This Win
             </Button>
           )}
-        </Card.Content>
-      </Card>
-
-      {/* Weekly Summary */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleLarge" style={styles.cardTitle}>
-            📊 This Week
-          </Text>
-          <View style={styles.weeklyStats}>
-            <View style={styles.stat}>
-              <Text variant="headlineSmall" style={styles.statNumber}>
-                {medsTaken}
-              </Text>
-              <Text variant="bodySmall">Medications</Text>
-            </View>
-            <View style={styles.stat}>
-              <Text variant="headlineSmall" style={styles.statNumber}>
-                {Math.round(waterProgress * 100)}%
-              </Text>
-              <Text variant="bodySmall">Water Goal</Text>
-            </View>
-            <View style={styles.stat}>
-              <Text variant="headlineSmall" style={styles.statNumber}>
-                {Math.round(stepsProgress * 100)}%
-              </Text>
-              <Text variant="bodySmall">Step Goal</Text>
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
+        </View>
+      </ModernCard>
       
       {/* Custom Alert */}
       <CustomAlert
@@ -268,89 +308,169 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  header: {
+    marginBottom: Spacing.lg,
+  },
   title: {
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
+    color: Colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
   },
   subtitle: {
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#666',
+    color: Colors.textSecondary,
   },
-  card: {
-    marginBottom: 20,
-    elevation: 2,
+  summaryCard: {
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
   },
-  cardHeader: {
+  summaryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: Spacing.md,
   },
-  cardTitle: {
-    marginBottom: 15,
-    color: '#333',
+  summaryTitle: {
+    color: Colors.textPrimary,
+    fontWeight: '600',
+  },
+  detailsLink: {
+    color: Colors.primary,
+    fontWeight: '500',
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  progressItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  progressLabel: {
+    color: Colors.textPrimary,
+    fontWeight: '500',
+  },
+  macroContainer: {
+    gap: Spacing.sm,
+  },
+  macroItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  macroLabel: {
+    color: Colors.textPrimary,
+    fontWeight: '500',
+    minWidth: 50,
+  },
+  macroValue: {
+    color: Colors.textSecondary,
+    minWidth: 80,
+  },
+  macroBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: Colors.progressBackground,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  macroProgress: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  medsCard: {
+    backgroundColor: Colors.medsBackground,
+  },
+  medsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  medsIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.medsPrimary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   medsList: {
-    marginBottom: 15,
+    flex: 1,
   },
   medItem: {
-    marginBottom: 5,
-    color: '#333',
+    color: Colors.textPrimary,
+    marginBottom: 2,
   },
   moreMeds: {
-    color: '#666',
+    color: Colors.textSecondary,
     fontStyle: 'italic',
   },
   noMeds: {
-    color: '#4CAF50',
+    color: Colors.success,
     textAlign: 'center',
-    marginBottom: 15,
     fontWeight: '500',
   },
-  waterAmount: {
-    color: '#007AFF',
-    fontWeight: 'bold',
+  waterCard: {
+    backgroundColor: Colors.waterBackground,
   },
-  stepsAmount: {
-    color: '#4CAF50',
-    fontWeight: 'bold',
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-    marginBottom: 8,
-  },
-  progressText: {
-    textAlign: 'center',
-    color: '#666',
-    marginBottom: 15,
-  },
-  actionButton: {
-    marginTop: 10,
-  },
-  weeklyStats: {
+  waterContent: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    alignItems: 'center',
+    gap: Spacing.md,
   },
-  stat: {
+  waterIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.waterPrimary + '20',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  statNumber: {
-    color: '#007AFF',
-    fontWeight: 'bold',
+  waterProgress: {
+    flex: 1,
+  },
+  stepsCard: {
+    backgroundColor: Colors.stepsBackground,
+  },
+  stepsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  stepsIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.stepsPrimary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepsProgress: {
+    flex: 1,
+  },
+  progressBar: {
+    height: 6,
+    borderRadius: 3,
+    marginBottom: Spacing.xs,
+  },
+  progressText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+  },
+  actionButton: {
+    marginTop: Spacing.sm,
   },
 });
 
