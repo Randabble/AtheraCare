@@ -289,11 +289,11 @@ const AlertsScreen: React.FC = () => {
                       )}
                       <Button
                         mode="outlined"
-                        onPress={() => Alert.alert('Contact', `Would you like to contact ${alert.ownerName} about this alert?`)}
+                        onPress={() => Alert.alert('Contact', `Would you like to contact ${alert.ownerName} about this alert? This will open a message to discuss the alert.`)}
                         style={styles.actionButton}
                         icon="message"
                       >
-                        Contact
+                        Contact {alert.ownerName}
                       </Button>
                     </>
                   )}

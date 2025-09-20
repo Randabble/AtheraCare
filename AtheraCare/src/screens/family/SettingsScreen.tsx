@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Card, Button, List, Switch, Divider, useTheme, Avatar, Chip } from 'react-native-paper';
+import { Text, Card, Button, List, Switch, Divider, Avatar, Chip } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 
 const FamilySettingsScreen: React.FC = () => {
   const { user, signOut } = useAuth();
-  const theme = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [familySharing, setFamilySharing] = useState(true);
   const [alertPreferences, setAlertPreferences] = useState({
@@ -117,7 +116,7 @@ const FamilySettingsScreen: React.FC = () => {
             <Avatar.Text 
               size={60} 
               label={familyInfo.name.charAt(0)}
-              style={{ backgroundColor: theme.colors.primary }}
+              style={{ backgroundColor: '#007AFF' }}
             />
             <View style={styles.familyDetails}>
               <Text variant="headlineSmall" style={styles.familyName}>
@@ -134,14 +133,18 @@ const FamilySettingsScreen: React.FC = () => {
               mode="contained"
               onPress={handleInviteFamily}
               style={styles.actionButton}
+              buttonColor="#007AFF"
+              textColor="white"
               icon="account-plus"
             >
               Invite Member
             </Button>
             <Button
               mode="outlined"
-              onPress={() => Alert.alert('Coming Soon', 'Family settings editing will be available in the next update.')}
+              onPress={() => Alert.alert('Coming Soon', 'Family settings editing will be available in the next update. You\'ll be able to change family name, manage member roles, and update family preferences.')}
               style={styles.actionButton}
+              buttonColor="#007AFF"
+              textColor="#007AFF"
               icon="cog"
             >
               Edit Family
@@ -166,17 +169,17 @@ const FamilySettingsScreen: React.FC = () => {
                   <Avatar.Text 
                     size={40} 
                     label={member.avatar}
-                    style={{ backgroundColor: member.role === 'senior' ? '#FF9500' : theme.colors.primary }}
+                     style={{ backgroundColor: member.role === 'senior' ? '#FF9500' : '#007AFF' }}  
                   />
                 )}
                 right={(props) => (
                   <View style={styles.memberActions}>
                     <Chip 
                       style={[styles.roleChip, { 
-                        backgroundColor: member.role === 'senior' ? '#FF9500' + '20' : theme.colors.primary + '20' 
+                        backgroundColor: member.role === 'senior' ? '#FF9500' + '20' : '#007AFF' + '20' 
                       }]}
                       textStyle={{ 
-                        color: member.role === 'senior' ? '#FF9500' : theme.colors.primary 
+                        color: member.role === 'senior' ? '#FF9500' : '#007AFF' 
                       }}
                     >
                       {member.role === 'senior' ? 'Senior' : 'Family'}
@@ -185,6 +188,7 @@ const FamilySettingsScreen: React.FC = () => {
                       mode="text"
                       onPress={() => handleManageMember(member)}
                       style={styles.manageButton}
+                      textColor="#007AFF"
                       icon="dots-vertical"
                     >
                       Manage
@@ -333,6 +337,8 @@ const FamilySettingsScreen: React.FC = () => {
           mode="outlined"
           onPress={handleLeaveFamily}
           style={styles.actionButton}
+          buttonColor="#FF3B30"
+          textColor="#FF3B30"
           icon="account-remove"
         >
           Leave Family
@@ -342,6 +348,8 @@ const FamilySettingsScreen: React.FC = () => {
           mode="contained"
           onPress={handleSignOut}
           style={[styles.actionButton, styles.signOutButton]}
+          buttonColor="#FF3B30"
+          textColor="white"
           icon="logout"
         >
           Sign Out

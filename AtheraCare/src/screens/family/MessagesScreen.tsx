@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, Card, Button, TextInput, Avatar, useTheme, FAB, List, Divider } from 'react-native-paper';
+import { Text, Card, Button, TextInput, Avatar, FAB, List, Divider } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 
 // Mock data for now - will be replaced with real Firestore data
@@ -179,7 +179,7 @@ const MessagesScreen: React.FC = () => {
                         label={getConversationPartner(message).charAt(0)}
                         style={{ 
                           backgroundColor: isFromCurrentUser(message) 
-                            ? theme.colors.primary 
+                            ? '#007AFF' 
                             : '#8E8E93' 
                         }}
                       />
@@ -204,7 +204,7 @@ const MessagesScreen: React.FC = () => {
             {messages.length > 5 && (
               <Button
                 mode="outlined"
-                onPress={() => Alert.alert('Coming Soon', 'Full message history will be available in the next update.')}
+                onPress={() => Alert.alert('Coming Soon', 'Full message history will be available in the next update. You\'ll be able to view all past conversations, search messages, and see detailed message history.')}
                 style={styles.viewAllButton}
                 icon="history"
               >
@@ -240,7 +240,7 @@ const MessagesScreen: React.FC = () => {
                           size={20} 
                           label={member.name.charAt(0)}
                           style={{ 
-                            backgroundColor: selectedRecipient === member.id ? 'white' : theme.colors.primary 
+                            backgroundColor: selectedRecipient === member.id ? 'white' : '#007AFF' 
                           }}
                         />
                       )}

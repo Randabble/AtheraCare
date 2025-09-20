@@ -92,11 +92,11 @@ export const Spacing = {
 };
 
 export const BorderRadius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  full: 9999,
+  sm: 4,
+  md: 8,
+  lg: 12,
+  xl: 16,
+  round: 50,
 };
 
 export const Shadows = {
@@ -121,4 +121,13 @@ export const Shadows = {
     shadowRadius: 8,
     elevation: 8,
   },
+};
+
+export const gradients = {
+  primary: ['#007AFF', '#0056CC'],
+  secondary: ['#34C759', '#28A745'],
+  accent: ['#FF9500', '#E6850E'],
+  water: ['#00C7BE', '#5DD0D0'],
+  steps: ['#34C759', '#5DD079'],
+  meds: ['#FF9500', '#FFB84D'],
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Button, ProgressBar, TextInput, useTheme } from 'react-native-paper';
+import { Text, Button, ProgressBar, TextInput } from 'react-native-paper';
 import ModernCard from '../../components/ModernCard';
 import ProgressRing from '../../components/ProgressRing';
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,7 +14,6 @@ import { WaterIcon, PlusIcon } from '../../components/icons/ModernIcons';
 const WaterScreen: React.FC = () => {
   const { user } = useAuth();
   const { preferences } = useOnboarding();
-  const theme = useTheme();
   const [waterIntake, setWaterIntake] = useState(0);
   const [waterGoal, setWaterGoal] = useState(64);
   const [loading, setLoading] = useState(true);
@@ -202,15 +201,16 @@ const WaterScreen: React.FC = () => {
           {quickAmounts.map((amount) => (
             <Button
               key={amount}
-              mode="outlined"
+              mode="contained"
               onPress={() => handleAddWater(amount)}
               disabled={loading}
               style={styles.quickAddButton}
               contentStyle={styles.quickAddButtonContent}
               buttonColor={Colors.waterPrimary}
-              textColor={Colors.waterPrimary}
+              textColor="white"
+              icon={() => <Text style={{ color: 'white', fontSize: 16 }}>💧</Text>}
             >
-              {amount} oz
+              +{amount} oz
             </Button>
           ))}
         </View>
@@ -239,7 +239,7 @@ const WaterScreen: React.FC = () => {
             buttonColor={Colors.waterPrimary}
             icon={() => <PlusIcon size={16} color="white" />}
           >
-            Add
+            Add {newGoal || '0'} oz
           </Button>
         </View>
       </ModernCard>
@@ -252,6 +252,7 @@ const WaterScreen: React.FC = () => {
           style={styles.actionButton}
           buttonColor={Colors.waterPrimary}
           textColor={Colors.waterPrimary}
+          icon="target"
         >
           Change Goal
         </Button>
@@ -262,6 +263,7 @@ const WaterScreen: React.FC = () => {
           disabled={loading}
           style={styles.actionButton}
           textColor={Colors.error}
+          icon="refresh"
         >
           Reset Today
         </Button>
@@ -287,6 +289,7 @@ const WaterScreen: React.FC = () => {
               mode="outlined"
               onPress={() => setShowGoalInput(false)}
               style={styles.cancelButton}
+              icon="close"
             >
               Cancel
             </Button>
@@ -296,6 +299,7 @@ const WaterScreen: React.FC = () => {
               disabled={loading || !newGoal.trim() || parseInt(newGoal) <= 0}
               style={styles.updateButton}
               buttonColor={Colors.waterPrimary}
+              icon="check"
             >
               Update Goal
             </Button>

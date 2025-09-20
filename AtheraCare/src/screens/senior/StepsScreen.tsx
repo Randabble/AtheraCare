@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Button, ProgressBar, useTheme } from 'react-native-paper';
+import { Text, Button, ProgressBar } from 'react-native-paper';
 import ModernCard from '../../components/ModernCard';
 import ProgressRing from '../../components/ProgressRing';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,7 +13,6 @@ import { StepsIcon, TrophyIcon } from '../../components/icons/ModernIcons';
 const StepsScreen: React.FC = () => {
   const { user } = useAuth();
   const { preferences } = useOnboarding();
-  const theme = useTheme();
   const [steps, setSteps] = useState(0);
   const [isPedometerAvailable, setIsPedometerAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -110,33 +109,31 @@ const StepsScreen: React.FC = () => {
       </View>
 
       {/* Today's Steps Card */}
-      <ModernCard style={styles.stepsCard}>
-        <View style={styles.stepsHeader}>
+      <ModernCard 
+        title="Today's Steps"
+        subtitle={`${steps.toLocaleString()} / ${preferences.stepGoal.toLocaleString()} steps`}
+        style={styles.stepsCard}
+      >
+        <View style={styles.stepsContent}>
           <View style={styles.stepsIconContainer}>
             <StepsIcon size={48} color={Colors.stepsPrimary} />
           </View>
-          <View style={styles.stepsInfo}>
-            <Text variant="headlineLarge" style={styles.stepsAmount}>
-              {steps.toLocaleString()}
-            </Text>
-            <Text variant="bodyMedium" style={styles.goalText}>
-              Goal: {preferences.stepGoal.toLocaleString()} steps
+          
+          <View style={styles.stepsProgress}>
+            <ProgressRing
+              progress={progress}
+              size={100}
+              strokeWidth={6}
+              color={Colors.stepsPrimary}
+              centerText={`${percentage}%`}
+              centerSubtext="Complete"
+            />
+            
+            <Text variant="bodyMedium" style={styles.percentageText}>
+              {percentage}% of daily goal
             </Text>
           </View>
         </View>
-        
-        <ProgressRing
-          progress={progress}
-          size={120}
-          strokeWidth={8}
-          color={Colors.stepsPrimary}
-          centerText={`${percentage}%`}
-          centerSubtext="Complete"
-        />
-        
-        <Text variant="bodyMedium" style={styles.percentageText}>
-          {percentage}% of daily goal
-        </Text>
         
         {progress >= 1 && (
           <Button
@@ -154,6 +151,7 @@ const StepsScreen: React.FC = () => {
       {/* Weekly Chart */}
       <ModernCard 
         title="This Week's Progress"
+        subtitle="Track your daily step count"
         style={styles.chartCard}
       >
         <View style={styles.chartContainer}>
@@ -176,8 +174,22 @@ const StepsScreen: React.FC = () => {
               <Text variant="bodySmall" style={styles.stepsLabel}>
                 {day.steps.toLocaleString()}
               </Text>
+              {day.steps >= preferences.stepGoal && (
+                <Text style={styles.goalBadge}>🎯</Text>
+              )}
             </View>
           ))}
+        </View>
+        
+        <View style={styles.chartLegend}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendColor, { backgroundColor: Colors.success }]} />
+            <Text variant="bodySmall" style={styles.legendText}>Goal Met</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendColor, { backgroundColor: Colors.stepsPrimary }]} />
+            <Text variant="bodySmall" style={styles.legendText}>In Progress</Text>
+          </View>
         </View>
       </ModernCard>
 
@@ -215,10 +227,11 @@ const StepsScreen: React.FC = () => {
           </Text>
           <Button
             mode="outlined"
-            onPress={() => Alert.alert('Coming Soon', 'Manual step entry will be available in the next update.')}
+            onPress={() => Alert.alert('Coming Soon', 'Manual step entry will be available in the next update. You\'ll be able to enter your daily step count manually or sync from your health app.')}
             style={styles.manualButton}
             buttonColor={Colors.stepsPrimary}
             textColor={Colors.stepsPrimary}
+            icon={() => <Text style={{ color: Colors.stepsPrimary, fontSize: 16 }}>👟</Text>}
           >
             Add Steps Manually
           </Button>
@@ -257,11 +270,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.stepsBackground,
     marginBottom: Spacing.lg,
   },
-  stepsHeader: {
+  stepsContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
-    gap: Spacing.md,
+    gap: Spacing.lg,
   },
   stepsIconContainer: {
     width: 64,
@@ -271,22 +283,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  stepsInfo: {
+  stepsProgress: {
     flex: 1,
-  },
-  stepsAmount: {
-    color: Colors.stepsPrimary,
-    fontWeight: '700',
-    marginBottom: Spacing.xs,
-  },
-  goalText: {
-    color: Colors.textSecondary,
+    alignItems: 'center',
   },
   percentageText: {
     textAlign: 'center',
     color: Colors.textSecondary,
     fontWeight: '500',
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
   },
   celebrationButton: {
     marginTop: Spacing.md,
@@ -326,6 +331,30 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     fontSize: 10,
     textAlign: 'center',
+  },
+  goalBadge: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  chartLegend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: Spacing.md,
+    gap: Spacing.lg,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  legendColor: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  legendText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
   },
   statusCard: {
     backgroundColor: Colors.surface,

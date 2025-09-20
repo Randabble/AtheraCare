@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
-import { Text, Card, useTheme } from 'react-native-paper';
+import { Text, Card } from 'react-native-paper';
 import { DailyActivity } from '../utils/activityTracker';
 
 interface ActivityChartProps {
@@ -20,7 +20,6 @@ const ActivityChart: React.FC<ActivityChartProps> = ({
   type,
   height = CHART_HEIGHT
 }) => {
-  const theme = useTheme();
 
   const getDayLabel = (date: string) => {
     const day = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
@@ -76,7 +75,7 @@ const ActivityChart: React.FC<ActivityChartProps> = ({
       case 'energy':
         return value >= 4 ? '#4CAF50' : value >= 3 ? '#FF9800' : '#F44336';
       default:
-        return theme.colors.primary;
+        return '#007AFF';
     }
   };
 

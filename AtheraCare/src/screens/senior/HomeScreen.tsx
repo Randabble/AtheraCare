@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import CustomAlert from '../../components/CustomAlert';
 import ModernCard from '../../components/ModernCard';
 import ProgressRing from '../../components/ProgressRing';
-import { Text, Button, ProgressBar, useTheme, Badge } from 'react-native-paper';
+import { Text, Button, ProgressBar, Badge } from 'react-native-paper';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { getMedications, Medication } from '../../utils/medications';
@@ -15,7 +15,6 @@ import { MedicationIcon, WaterIcon, StepsIcon, ShareIcon } from '../../component
 const HomeScreen: React.FC = () => {
   const { user } = useAuth();
   const { preferences } = useOnboarding();
-  const theme = useTheme();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [hydration, setHydration] = useState<HydrationLog | null>(null);
   const [steps, setSteps] = useState(0);
@@ -86,6 +85,13 @@ const HomeScreen: React.FC = () => {
   const waterProgress = hydration ? hydration.totalOz / preferences.waterGoal : 0;
   const stepsProgress = preferences.stepGoal > 0 ? steps / preferences.stepGoal : 0;
 
+  const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Morning';
+    if (hour < 17) return 'Afternoon';
+    return 'Evening';
+  };
+
   const handleShareWin = (type: string) => {
     showAlert(
       'Share This Win! 🎉',
@@ -110,63 +116,36 @@ const HomeScreen: React.FC = () => {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text variant="headlineLarge" style={styles.title}>
-          Today
+          Good {getTimeOfDay()}! 👋
         </Text>
         <Text variant="bodyLarge" style={styles.subtitle}>
-          Here's how you're doing
+          Here's your health summary for today
         </Text>
       </View>
 
-      {/* Summary Card with Progress Rings */}
+      {/* Quick Stats Summary */}
       <ModernCard style={styles.summaryCard}>
         <View style={styles.summaryHeader}>
-          <Text variant="titleLarge" style={styles.summaryTitle}>Summary</Text>
-          <Text variant="bodyMedium" style={styles.detailsLink}>Details</Text>
+          <Text variant="titleLarge" style={styles.summaryTitle}>Today's Progress</Text>
         </View>
         
-        <View style={styles.progressContainer}>
-          <View style={styles.progressItem}>
-            <Text variant="bodyMedium" style={styles.progressLabel}>0 Eaten</Text>
+        <View style={styles.quickStats}>
+          <View style={styles.statItem}>
+            <Text variant="headlineSmall" style={styles.statNumber}>{medsTaken}</Text>
+            <Text variant="bodySmall" style={styles.statLabel}>Medications</Text>
+            <Text variant="bodySmall" style={styles.statSubtext}>of {totalMeds} taken</Text>
           </View>
           
-          <ProgressRing
-            progress={waterProgress}
-            size={140}
-            strokeWidth={6}
-            color={Colors.waterPrimary}
-            centerText="2,561"
-            centerSubtext="Remaining"
-          />
-          
-          <View style={styles.progressItem}>
-            <Text variant="bodyMedium" style={styles.progressLabel}>72 Burned</Text>
-          </View>
-        </View>
-
-        {/* Macronutrient breakdown */}
-        <View style={styles.macroContainer}>
-          <View style={styles.macroItem}>
-            <Text variant="bodySmall" style={styles.macroLabel}>Carbs</Text>
-            <Text variant="bodySmall" style={styles.macroValue}>0 / 312 g</Text>
-            <View style={styles.macroBar}>
-              <View style={[styles.macroProgress, { width: '0%', backgroundColor: Colors.primary }]} />
-            </View>
+          <View style={styles.statItem}>
+            <Text variant="headlineSmall" style={styles.statNumber}>{hydration?.totalOz || 0}</Text>
+            <Text variant="bodySmall" style={styles.statLabel}>Water (oz)</Text>
+            <Text variant="bodySmall" style={styles.statSubtext}>of {preferences.waterGoal} goal</Text>
           </View>
           
-          <View style={styles.macroItem}>
-            <Text variant="bodySmall" style={styles.macroLabel}>Protein</Text>
-            <Text variant="bodySmall" style={styles.macroValue}>0 / 125 g</Text>
-            <View style={styles.macroBar}>
-              <View style={[styles.macroProgress, { width: '0%', backgroundColor: Colors.primary }]} />
-            </View>
-          </View>
-          
-          <View style={styles.macroItem}>
-            <Text variant="bodySmall" style={styles.macroLabel}>Fat</Text>
-            <Text variant="bodySmall" style={styles.macroValue}>0 / 83 g</Text>
-            <View style={styles.macroBar}>
-              <View style={[styles.macroProgress, { width: '0%', backgroundColor: Colors.primary }]} />
-            </View>
+          <View style={styles.statItem}>
+            <Text variant="headlineSmall" style={styles.statNumber}>{Math.round(steps / 1000)}k</Text>
+            <Text variant="bodySmall" style={styles.statLabel}>Steps</Text>
+            <Text variant="bodySmall" style={styles.statSubtext}>of {Math.round(preferences.stepGoal / 1000)}k goal</Text>
           </View>
         </View>
       </ModernCard>
@@ -335,60 +314,34 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   summaryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: Spacing.md,
   },
   summaryTitle: {
     color: Colors.textPrimary,
     fontWeight: '600',
   },
-  detailsLink: {
+  quickStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
     color: Colors.primary,
-    fontWeight: '500',
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
   },
-  progressContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-  },
-  progressItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  progressLabel: {
+  statLabel: {
     color: Colors.textPrimary,
     fontWeight: '500',
+    marginBottom: 2,
   },
-  macroContainer: {
-    gap: Spacing.sm,
-  },
-  macroItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  macroLabel: {
-    color: Colors.textPrimary,
-    fontWeight: '500',
-    minWidth: 50,
-  },
-  macroValue: {
+  statSubtext: {
     color: Colors.textSecondary,
-    minWidth: 80,
-  },
-  macroBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: Colors.progressBackground,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  macroProgress: {
-    height: '100%',
-    borderRadius: 2,
+    fontSize: 12,
   },
   medsCard: {
     backgroundColor: Colors.medsBackground,

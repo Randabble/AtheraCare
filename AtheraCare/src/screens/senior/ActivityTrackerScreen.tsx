@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Button, Chip, useTheme, SegmentedButtons, ProgressBar } from 'react-native-paper';
+import { Text, Card, Button, Chip, SegmentedButtons, ProgressBar } from 'react-native-paper';
+import ModernCard from '../../components/ModernCard';
+import ProgressRing from '../../components/ProgressRing';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOnboarding } from '../../contexts/OnboardingContext';
 import { Pedometer } from 'expo-sensors';
@@ -20,11 +22,12 @@ import { testFirebaseConnection, testCollectionPermissions, createTestActivityDa
 import { scheduleWeeklyReport } from '../../utils/emailReports';
 import ActivityChart from '../../components/ActivityChart';
 import CustomAlert from '../../components/CustomAlert';
+import { Colors, Spacing, BorderRadius } from '../../theme/colors';
+import { StepsIcon, TrophyIcon } from '../../components/icons/ModernIcons';
 
 const ActivityTrackerScreen: React.FC = () => {
   const { user } = useAuth();
   const { preferences } = useOnboarding();
-  const theme = useTheme();
   
   const [currentWeekData, setCurrentWeekData] = useState<DailyActivity[]>([]);
   const [previousWeekData, setPreviousWeekData] = useState<DailyActivity[]>([]);
@@ -310,119 +313,119 @@ const ActivityTrackerScreen: React.FC = () => {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <Text variant="headlineMedium" style={styles.title}>
-        📊 Activity Tracker
-      </Text>
-      
-      <Text variant="bodyLarge" style={styles.subtitle}>
-        Track your daily progress and weekly trends
-      </Text>
+      <View style={styles.header}>
+        <Text variant="headlineLarge" style={styles.title}>
+          Activity Tracker
+        </Text>
+        
+        <Text variant="bodyLarge" style={styles.subtitle}>
+          Track your daily progress and weekly trends
+        </Text>
+      </View>
 
       {/* Today's Steps Card */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            👟 Today's Steps
-          </Text>
-          
-          <View style={styles.stepsHeader}>
-            <Text variant="headlineLarge" style={styles.stepsAmount}>
-              {steps.toLocaleString()}
-            </Text>
-            <Text variant="bodyMedium" style={styles.goalText}>
-              Goal: {(preferences.stepGoal || 10000).toLocaleString()} steps
-            </Text>
+      <ModernCard 
+        title="Today's Steps"
+        subtitle={`${steps.toLocaleString()} / ${(preferences.stepGoal || 10000).toLocaleString()} steps`}
+        style={styles.stepsCard}
+      >
+        <View style={styles.stepsContent}>
+          <View style={styles.stepsIconContainer}>
+            <StepsIcon size={48} color={Colors.stepsPrimary} />
           </View>
           
-          <ProgressBar 
-            progress={(preferences.stepGoal || 10000) > 0 ? steps / (preferences.stepGoal || 10000) : 0} 
-            color={theme.colors.primary}
-            style={styles.progressBar}
-          />
-          
-          <Text variant="bodyMedium" style={styles.percentageText}>
-            {Math.round(((preferences.stepGoal || 10000) > 0 ? steps / (preferences.stepGoal || 10000) : 0) * 100)}% of daily goal
-          </Text>
-          
-          <View style={styles.pedometerStatus}>
-            {isPedometerAvailable ? (
-              <Text variant="bodySmall" style={styles.statusText}>
-                ✅ Pedometer is available and tracking your steps
-              </Text>
-            ) : (
-              <Text variant="bodySmall" style={styles.statusText}>
-                ⚠️ Pedometer not available on this device
-              </Text>
-            )}
+          <View style={styles.stepsProgress}>
+            <ProgressRing
+              progress={(preferences.stepGoal || 10000) > 0 ? steps / (preferences.stepGoal || 10000) : 0}
+              size={100}
+              strokeWidth={6}
+              color={Colors.stepsPrimary}
+              centerText={`${Math.round(((preferences.stepGoal || 10000) > 0 ? steps / (preferences.stepGoal || 10000) : 0) * 100)}%`}
+              centerSubtext="Complete"
+            />
+            
+            <Text variant="bodyMedium" style={styles.percentageText}>
+              {Math.round(((preferences.stepGoal || 10000) > 0 ? steps / (preferences.stepGoal || 10000) : 0) * 100)}% of daily goal
+            </Text>
           </View>
-        </Card.Content>
-      </Card>
+        </View>
+        
+        <View style={styles.pedometerStatus}>
+          {isPedometerAvailable ? (
+            <Text variant="bodySmall" style={styles.statusText}>
+              ✅ Pedometer is available and tracking your steps
+            </Text>
+          ) : (
+            <Text variant="bodySmall" style={styles.statusText}>
+              ⚠️ Pedometer not available on this device
+            </Text>
+          )}
+        </View>
+      </ModernCard>
 
       {/* Firebase Test Button - Remove this after fixing permissions */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            🔧 Firebase Debug
-          </Text>
-          <Text variant="bodyMedium" style={styles.debugText}>
-            If you're seeing permission errors, tap this button to test Firebase connection and permissions.
-          </Text>
-                     <Button
-             mode="outlined"
-             onPress={testFirebasePermissions}
-             style={styles.testButton}
-             icon="bug"
-           >
-             Test Firebase Permissions
-           </Button>
-           
-           <Button
-             mode="outlined"
-             onPress={createTestData}
-             style={styles.testButton}
-             icon="plus"
-           >
-             Create Test Data
-           </Button>
-           
-           <Button
-             mode="outlined"
-             onPress={sendWeeklyReport}
-             style={styles.testButton}
-             icon="email"
-           >
-             Send Weekly Report
-           </Button>
-        </Card.Content>
-      </Card>
+      <ModernCard 
+        title="Firebase Debug"
+        subtitle="If you're seeing permission errors, tap this button to test Firebase connection and permissions."
+        style={styles.testCard}
+      >
+        <Button
+          mode="outlined"
+          onPress={testFirebasePermissions}
+          style={styles.testButton}
+          buttonColor={Colors.primary}
+          textColor={Colors.primary}
+          icon="bug"
+        >
+          Test Firebase Permissions
+        </Button>
+        
+        <Button
+          mode="outlined"
+          onPress={createTestData}
+          style={styles.testButton}
+          buttonColor={Colors.primary}
+          textColor={Colors.primary}
+          icon="plus"
+        >
+          Create Test Data
+        </Button>
+        
+        <Button
+          mode="outlined"
+          onPress={sendWeeklyReport}
+          style={styles.testButton}
+          buttonColor={Colors.primary}
+          textColor={Colors.primary}
+          icon="email"
+        >
+          Send Weekly Report
+        </Button>
+      </ModernCard>
 
       {/* Week Selector */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Week Selection
-          </Text>
-          <SegmentedButtons
-            value={selectedWeek}
-            onValueChange={(value) => setSelectedWeek(value as 'current' | 'previous')}
-            buttons={[
-              { value: 'current', label: 'This Week' },
-              { value: 'previous', label: 'Last Week' }
-            ]}
-          />
-          <Text variant="bodySmall" style={styles.weekLabel}>
-            {getWeekLabel()}
-          </Text>
-        </Card.Content>
-      </Card>
+      <ModernCard 
+        title="Week Selection"
+        subtitle={getWeekLabel()}
+        style={styles.weekSelectorCard}
+      >
+        <SegmentedButtons
+          value={selectedWeek}
+          onValueChange={(value) => setSelectedWeek(value as 'current' | 'previous')}
+          buttons={[
+            { value: 'current', label: 'This Week' },
+            { value: 'previous', label: 'Last Week' }
+          ]}
+        />
+      </ModernCard>
 
       {/* Weekly Summary Stats */}
       {stats && (
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              📈 Weekly Summary
-            </Text>
+        <ModernCard 
+          title="Weekly Summary"
+          subtitle="Your progress for the selected week"
+          style={styles.summaryCard}
+        >
             
             <View style={styles.statsGrid}>
               <View style={styles.statItem}>
@@ -457,8 +460,7 @@ const ActivityTrackerScreen: React.FC = () => {
                  <Text style={styles.captionText}>Tracked</Text>
               </View>
             </View>
-          </Card.Content>
-        </Card>
+        </ModernCard>
       )}
 
       {/* Medication Chart */}
@@ -612,35 +614,79 @@ const ActivityTrackerScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: Spacing.md,
+    paddingBottom: Spacing.xxl,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  header: {
+    marginBottom: Spacing.lg,
+  },
   title: {
+    color: Colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: Spacing.xs,
     textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
   },
   subtitle: {
+    color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 30,
-    color: '#666',
   },
-  card: {
-    marginBottom: 16,
-    elevation: 2,
+  stepsCard: {
+    backgroundColor: Colors.stepsBackground,
+    marginBottom: Spacing.lg,
   },
-  sectionTitle: {
-    marginBottom: 16,
-    color: '#333',
+  stepsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  stepsIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.stepsPrimary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepsProgress: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  percentageText: {
+    textAlign: 'center',
+    color: Colors.textSecondary,
     fontWeight: '500',
+    marginTop: Spacing.sm,
+  },
+  pedometerStatus: {
+    alignItems: 'center',
+    marginTop: Spacing.md,
+  },
+  statusText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+  },
+  testCard: {
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
+  },
+  testButton: {
+    marginBottom: Spacing.sm,
+  },
+  weekSelectorCard: {
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
+  },
+  summaryCard: {
+    backgroundColor: Colors.surface,
+    marginBottom: Spacing.lg,
   },
   weekLabel: {
     textAlign: 'center',
